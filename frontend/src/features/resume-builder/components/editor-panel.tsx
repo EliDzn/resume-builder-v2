@@ -1,49 +1,71 @@
 import SidePanel from "./side-panel";
 import InputField from "@/components/ui/input-field";
+import EditorPanelSection from "./editor-panel-section";
 
 export default function EditorPanel() {
   return (
-    <SidePanel>
+    <SidePanel variant="left">
       <div className="flex h-full flex-col">
-        <header className="shrink-0 border-b px-4 py-4">
-          <h2 className="text-base font-semibold">Editor</h2>
+        <header className="shrink-0 border-b px-4 py-9">
+          <h2 className="text-2xl font-bold">Optimized Resume Builder (v2)</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Add and edit your resume information.
+            A local-first resume builder! Need a guide? AI is there to help you!
           </p>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="space-y-6">
-            <section className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium">Personal Information</h3>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Start with the basics for your resume.
-                </p>
-              </div>
-
-              <div>
-                <h3>Personal</h3>
-                <fieldset className="space-y-4">
-                  <label>Basic Information</label>
-                  <InputField
-                    id="full-name"
-                    label="Full name"
-                    name="fullName"
-                    placeholder="John Doe"
-                    required
-                  />
-                  <InputField
-                    id="role"
-                    label="role"
-                    name="role"
-                    placeholder="Contractor"
-                  />
-                </fieldset>
-              </div>
-            </section>
-          </div>
-        </div>
+        <EditorPanelSection>
+          <h3>Personal</h3>
+          <fieldset className="space-y-3">
+            <legend>Basic Information</legend>
+            <InputField
+              id="full-name"
+              name="full-name"
+              label="Full name"
+              placeholder="John Doe"
+              required
+            />
+            <InputField
+              id="role"
+              name="role"
+              label="Role"
+              placeholder="Associate"
+            />
+            <InputField
+              id="location"
+              name="role"
+              label="Location"
+              placeholder="Manila,Philippines"
+            />
+            <InputField
+              id="number"
+              name="number"
+              label="Number"
+              placeholder="123-4567"
+              type="tel"
+            />
+            <InputField
+              id="email"
+              name="role"
+              label="Email"
+              placeholder="john@email.com"
+              type="email"
+            />
+            <InputField
+              id="linkedin"
+              label="LinkedIn"
+              name="linkedin"
+              placeholder="linkedin.com/in/john-doe"
+              type="url"
+            />
+            <InputField
+              id="github"
+              label="Github"
+              name="github"
+              placeholder="github.com/JohnDoe"
+              type="url"
+            />
+          </fieldset>
+        </EditorPanelSection>
       </div>
     </SidePanel>
   );

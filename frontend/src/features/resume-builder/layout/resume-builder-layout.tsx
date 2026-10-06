@@ -6,7 +6,8 @@ import {
 
 import Header from "@/components/layout/header";
 import EditorPanel from "../components/editor-panel";
-// import PreviewPanel from "../components/preview-panel";
+import PreviewPanel from "../components/preview-panel";
+import InsightPanel from "../components/insight-panel";
 
 export default function ResumeBuilderLayout() {
   return (
@@ -29,9 +30,7 @@ export default function ResumeBuilderLayout() {
         <ResizableHandle withHandle />
 
         <ResizablePanel defaultSize="50%" minSize="30%" className="min-w-0">
-          <section className="h-full min-w-0 w-full overflow-auto">
-            Resume Preview
-          </section>
+          <PreviewPanel />
         </ResizablePanel>
 
         <ResizableHandle withHandle />
@@ -42,9 +41,7 @@ export default function ResumeBuilderLayout() {
           maxSize="33.33%"
           className="min-w-0"
         >
-          <section className="h-full min-w-0 w-full overflow-auto">
-            Resume Insights
-          </section>
+          <InsightPanel />
         </ResizablePanel>
       </ResizablePanelGroup>
     </main>

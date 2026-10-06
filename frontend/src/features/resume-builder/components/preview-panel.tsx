@@ -1,8 +1,12 @@
+import PreviewToolbar from "./preview-toolbar";
+
 export default function PreviewPanel() {
   return (
-    <section className="w-full flex items-center justify-center text-center">
-      <div className="w-full border-b">preview toolbar</div>
-      <div className="h-full mt-2"></div>
+    <section className="w-full h-full flex flex-col items-center justify-center text-center">
+      <PreviewToolbar />
+      <div className="h-full w-full flex items-center justify-center">
+        Already have a resume? Upload it here
+      </div>
     </section>
   );
 }
