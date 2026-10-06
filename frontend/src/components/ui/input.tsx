@@ -1,13 +1,17 @@
 import type { InputHTMLAttributes } from "react";
+import { cn } from "@/lib/utils";
 
 type InputProps = InputHTMLAttributes<HTMLInputElement>;
 
-export default function Input({ type = "text", ...props }: InputProps) {
+export default function Input({ type, className, ...props }: InputProps) {
   return (
     <input
       type={type}
       {...props}
-      className="p-2 border-2 border-gray-500 rounded-xs"
+      className={cn(
+        "rounded-xs border-2 border-default p-2 placeholder:text-muted focus-visible:border-foreground focus-visible:rounded-xs",
+        className
+      )}
     />
   );
 }

@@ -22,13 +22,24 @@ export default function EditorPanel() {
                 </p>
               </div>
 
-              <div className="space-y-4">
-                <InputField
-                  id="full-name"
-                  label="Full name"
-                  name="fullName"
-                  placeholder="John Doe"
-                />
+              <div>
+                <h3>Personal</h3>
+                <fieldset className="space-y-4">
+                  <label>Basic Information</label>
+                  <InputField
+                    id="full-name"
+                    label="Full name"
+                    name="fullName"
+                    placeholder="John Doe"
+                    required
+                  />
+                  <InputField
+                    id="role"
+                    label="role"
+                    name="role"
+                    placeholder="Contractor"
+                  />
+                </fieldset>
               </div>
             </section>
           </div>
