@@ -1,11 +1,61 @@
-type EditorPanelSectionProps = { children: React.ReactNode };
+import { useId, useState, type ReactNode } from "react";
+import { ChevronsUp } from "lucide-react";
+
+type EditorPanelSectionProps = {
+  title: string;
+  children: ReactNode;
+  defaultOpen?: boolean;
+};
 
 export default function EditorPanelSection({
-  children
+  title,
+  children,
+  defaultOpen = true
 }: EditorPanelSectionProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const contentId = useId();
+
   return (
-    <section className="w-full flex flex-col p-4 border-y border-y-foreground">
-      {children}
+    <section className="w-full border-y border-foreground">
+      <h3 className="m-0">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between p-4 text-left"
+          aria-expanded={isOpen}
+          aria-controls={contentId}
+          onClick={() => setIsOpen((open) => !open)}
+        >
+          <span className="text-h2-desktop font-semibold">{title}</span>
+
+          <ChevronsUp
+            aria-hidden="true"
+            className={[
+              "transition-transform duration-300 ease-out motion-reduce:transition-none",
+              isOpen && "rotate-180"
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          />
+        </button>
+      </h3>
+
+      <div
+        id={contentId}
+        aria-hidden={!isOpen}
+        className={[
+          "grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none",
+          isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        ].join(" ")}
+      >
+        <div
+          className={[
+            "min-h-0 overflow-hidden px-4 transition-opacity duration-200",
+            isOpen ? "opacity-100" : "pointer-events-none opacity-0"
+          ].join(" ")}
+        >
+          <div className="pb-4">{children}</div>
+        </div>
+      </div>
     </section>
   );
 }

@@ -18,11 +18,6 @@ body {
   padding: 0;
 }
 
-html {
-  width: 100%;
-  min-height: 100%;
-}
-
 :root {
   --background: oklch(0.982 0.002 247.839);
   --subtle: oklch(0.911 0.007 247.901);
@@ -52,81 +47,94 @@ html {
   --color-warning: var(--warning);
   --color-error: var(--error);
 
-  /* Display */
-  --text-display-mobile: 2.6666667rem;
-  --text-display-mobile_line-height: 2.625rem;
+  /* Major Second Type Scale */
+  --text-display-mobile: 2.027rem;
+  --text-display-mobile_line-height: 2.4rem;
   --text-display-mobile_letter-spacing: 0;
 
-  --text-display-tablet: 4.3125rem;
-  --text-display-tablet_line-height: 4rem;
-  --text-display-tablet_letter-spacing: -0.03em;
+  --text-display-tablet: 2.027rem;
+  --text-display-tablet_line-height: 2.4rem;
+  --text-display-tablet_letter-spacing: 0;
 
-  --text-display-desktop: 4.3125rem;
-  --text-display-desktop_line-height: 4.8125rem;
-  --text-display-desktop_letter-spacing: -0.03em;
+  --text-display-desktop: 2.027rem;
+  --text-display-desktop_line-height: 2.4rem;
+  --text-display-desktop_letter-spacing: 0;
 
   /* H1 */
-  --text-h1-mobile: 2.1875rem;
-  --text-h1-mobile_line-height: 2.625rem;
+  --text-h1-mobile: 1.802rem;
+  --text-h1-mobile_line-height: 2.2rem;
   --text-h1-mobile_letter-spacing: 0;
 
-  --text-h1-tablet: 2.75rem;
-  --text-h1-tablet_line-height: 3.25rem;
-  --text-h1-tablet_letter-spacing: -0.02em;
+  --text-h1-tablet: 1.802rem;
+  --text-h1-tablet_line-height: 2.2rem;
+  --text-h1-tablet_letter-spacing: 0;
 
-  --text-h1-desktop: 3.4375rem;
-  --text-h1-desktop_line-height: 4rem;
-  --text-h1-desktop_letter-spacing: -0.02em;
+  --text-h1-desktop: 1.802rem;
+  --text-h1-desktop_line-height: 2.2rem;
+  --text-h1-desktop_letter-spacing: 0;
 
   /* H2 */
-  --text-h2-tablet: 2.75rem;
-  --text-h2-tablet_line-height: 3.25rem;
-  --text-h2-tablet_letter-spacing: -0.01em;
+  --text-h2-mobile: 1.602rem;
+  --text-h2-mobile_line-height: 2rem;
+  --text-h2-mobile_letter-spacing: 0;
 
-  --text-h2-desktop: 2.75rem;
-  --text-h2-desktop_line-height: 3.375rem;
-  --text-h2-desktop_letter-spacing: -0.01em;
+  --text-h2-tablet: 1.602rem;
+  --text-h2-tablet_line-height: 2rem;
+  --text-h2-tablet_letter-spacing: 0;
+
+  --text-h2-desktop: 1.602rem;
+  --text-h2-desktop_line-height: 2rem;
+  --text-h2-desktop_letter-spacing: 0;
 
   /* H3 */
-  --text-h3-tablet: 1.75rem;
-  --text-h3-tablet_line-height: 2.25rem;
+  --text-h3-mobile: 1.424rem;
+  --text-h3-mobile_line-height: 1.75rem;
 
-  --text-h3-desktop: 2.1875rem;
-  --text-h3-desktop_line-height: 2.8125rem;
+  --text-h3-tablet: 1.424rem;
+  --text-h3-tablet_line-height: 1.75rem;
+
+  --text-h3-desktop: 1.424rem;
+  --text-h3-desktop_line-height: 1.75rem;
 
   /* H4 */
-  --text-h4-tablet: 1.375rem;
-  --text-h4-tablet_line-height: 1.75rem;
+  --text-h4-mobile: 1.266rem;
+  --text-h4-mobile_line-height: 1.6rem;
 
-  --text-h4-desktop: 1.75rem;
-  --text-h4-desktop_line-height: 2.3125rem;
+  --text-h4-tablet: 1.266rem;
+  --text-h4-tablet_line-height: 1.6rem;
 
-  /* Body-lg */
-  --text-body-lg-mobile: 1rem;
-  --text-body-lg-mobile_line-height: 1.5rem;
+  --text-h4-desktop: 1.266rem;
+  --text-h4-desktop_line-height: 1.6rem;
 
-  --text-body-lg-tablet: 1.25rem;
-  --text-body-lg-tablet_line-height: 1.75rem;
+  /* Body Large */
+  --text-body-lg-mobile: 1.125rem;
+  --text-body-lg-mobile_line-height: 1.6rem;
 
-  --text-body-lg-desktop: 1.375rem;
-  --text-body-lg-desktop_line-height: 1.9375rem;
+  --text-body-lg-tablet: 1.125rem;
+  --text-body-lg-tablet_line-height: 1.6rem;
 
-  /* Body-md */
+  --text-body-lg-desktop: 1.125rem;
+  --text-body-lg-desktop_line-height: 1.6rem;
+
+  /* Body Medium */
   --text-body-md-mobile: 1rem;
   --text-body-md-mobile_line-height: 1.5rem;
 
-  --text-body-md-desktop: 1.125rem;
-  --text-body-md-desktop_line-height: 1.625rem;
+  --text-body-md-tablet: 1rem;
+  --text-body-md-tablet_line-height: 1.5rem;
+
+  --text-body-md-desktop: 1rem;
+  --text-body-md-desktop_line-height: 1.5rem;
 
   /* Caption */
-  --text-caption-base: 0.875rem;
-  --text-caption-base_line-height: 1.375rem;
+  --text-caption-base: 0.889rem;
+  --text-caption-base_line-height: 1.25rem;
 
-  /* Fine print */
-  --text-fine-base: 0.75rem;
+  /* Fine Print */
+  --text-fine-base: 0.79rem;
   --text-fine-base_line-height: 1.125rem;
 
-  /* Layout spacing */
+  /* Layout Spacing */
   --spacing-page-mobile: 1rem;
   --spacing-page-tablet: 1.5rem;
   --spacing-page-desktop: 2rem;
@@ -139,7 +147,6 @@ html {
 @layer base {
   html {
     font-size: 16px;
-    scrollbar-gutter: stable;
     scroll-behavior: smooth;
     font-family: var(--font-sans);
     @apply font-sans;

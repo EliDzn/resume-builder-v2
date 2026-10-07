@@ -13,10 +13,10 @@ export default function EditorPanel() {
           </p>
         </header>
 
-        <EditorPanelSection>
-          <h3>Personal</h3>
+        <EditorPanelSection title="Personal">
           <fieldset className="space-y-3">
-            <legend>Basic Information</legend>
+            <legend className="text-h3-desktop">Basic Information</legend>
+
             <InputField
               id="full-name"
               name="full-name"
@@ -24,18 +24,21 @@ export default function EditorPanel() {
               placeholder="John Doe"
               required
             />
+
             <InputField
               id="role"
               name="role"
               label="Role"
               placeholder="Associate"
             />
+
             <InputField
               id="location"
-              name="role"
+              name="location"
               label="Location"
-              placeholder="Manila,Philippines"
+              placeholder="Manila, Philippines"
             />
+
             <InputField
               id="number"
               name="number"
@@ -43,24 +46,27 @@ export default function EditorPanel() {
               placeholder="123-4567"
               type="tel"
             />
+
             <InputField
               id="email"
-              name="role"
+              name="email"
               label="Email"
               placeholder="john@email.com"
               type="email"
             />
+
             <InputField
               id="linkedin"
-              label="LinkedIn"
               name="linkedin"
+              label="LinkedIn"
               placeholder="linkedin.com/in/john-doe"
               type="url"
             />
+
             <InputField
               id="github"
-              label="Github"
               name="github"
+              label="Github"
               placeholder="github.com/JohnDoe"
               type="url"
             />

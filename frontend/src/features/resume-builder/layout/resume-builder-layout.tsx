@@ -11,9 +11,8 @@ import InsightPanel from "../components/insight-panel";
 
 export default function ResumeBuilderLayout() {
   return (
-    <main className="flex h-screen w-full min-w-0 flex-col overflow-hidden">
+    <main className="flex h-screen w-full min-w-0  flex-col overflow">
       <Header />
-
       <ResizablePanelGroup
         orientation="horizontal"
         className="min-h-0 min-w-0 flex-1"
