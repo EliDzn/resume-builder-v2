@@ -16,7 +16,7 @@ export default function SidePanel({
   return (
     <aside
       className={[
-        "bg-background flex h-full w-full flex-col overflow-hidden",
+        "bg-background flex h-full w-full flex-col scrollbar-gutter-stable",
         variant === "left" && "border-r",
         variant === "right" && "border-l",
         className

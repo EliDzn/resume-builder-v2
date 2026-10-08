@@ -1,3 +1,4 @@
+import { GripVertical } from "lucide-react";
 import { cn } from "cn";
 import * as ResizablePrimitive from "react-resizable-panels";
 
@@ -22,7 +23,7 @@ function ResizablePanel({ ...props }: ResizablePrimitive.PanelProps) {
 }
 
 function ResizableHandle({
-  withHandle,
+  withHandle = true,
   className,
   ...props
 }: ResizablePrimitive.SeparatorProps & {
@@ -31,14 +32,20 @@ function ResizableHandle({
   return (
     <ResizablePrimitive.Separator
       data-slot="resizable-handle"
+      aria-label="Resize panels"
       className={cn(
-        "relative flex w-px shrink-0 grow-0 basis-px items-center justify-center bg-border ring-offset-background focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-hidden aria-[orientation=horizontal]:h-px aria-[orientation=horizontal]:w-full aria-[orientation=horizontal]:basis-px",
+        "relative flex shrink-0 grow-0 basis-px cursor-col-resize items-center justify-center bg-border transition-colors hover:bg-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring aria-[orientation=horizontal]:h-px aria-[orientation=horizontal]:w-full aria-[orientation=horizontal]:cursor-row-resize",
         className
       )}
       {...props}
     >
       {withHandle && (
-        <div className="absolute z-10 h-6 w-1 rounded-lg bg-border" />
+        <span className="absolute z-10 flex h-8 w-4 items-center justify-center rounded-sm bg-strong text-background shadow-md transition-colors">
+          <GripVertical
+            aria-hidden="true"
+            className="h-4 w-4 aria-[orientation=horizontal]:rotate-90"
+          />
+        </span>
       )}
     </ResizablePrimitive.Separator>
   );

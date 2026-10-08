@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 
 type PreviewToolbarButtonProps = {
   children: ReactNode;
-  // icon: string;
 };
 
 function PreviewToolbarButton({ children }: PreviewToolbarButtonProps) {
@@ -15,13 +14,15 @@ function PreviewToolbarButton({ children }: PreviewToolbarButtonProps) {
 
 type PreviewToolbarButtonGroupProps = {
   children: ReactNode;
+  className?: string;
 };
 
 function PreviewToolbarButtonGroup({
-  children
+  children,
+  className
 }: PreviewToolbarButtonGroupProps) {
   return (
-    <div className="flex flex-row divide-x border-x divide-x-foreground">
+    <div className={`flex flex-row divide-x divide-x-foreground ${className}`}>
       {children}
     </div>
   );
@@ -33,11 +34,11 @@ export default function PreviewToolbar() {
       role="toolbar"
       className="w-full bg-background flex flex-row justify-between border-b border-foreground"
     >
-      <PreviewToolbarButtonGroup>
+      <PreviewToolbarButtonGroup className="border-r">
         <PreviewToolbarButton>undo</PreviewToolbarButton>
         <PreviewToolbarButton>redo</PreviewToolbarButton>
       </PreviewToolbarButtonGroup>
-      <PreviewToolbarButtonGroup>
+      <PreviewToolbarButtonGroup className="border-l">
         <PreviewToolbarButton>font</PreviewToolbarButton>
         <PreviewToolbarButton>zoom in</PreviewToolbarButton>
         <PreviewToolbarButton>zoom out</PreviewToolbarButton>

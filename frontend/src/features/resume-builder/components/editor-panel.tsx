@@ -3,21 +3,22 @@ import InputField from "@/components/ui/input-field";
 import TextareaField from "@/components/ui/textarea-field";
 import EditorPanelSection from "./editor-panel-section";
 import EditorPanelFieldset from "./editor-panel-fieldset";
+import EditorPanelLegend from "./editor-panel-legend";
+import Button from "@/components/ui/button";
 
 export default function EditorPanel() {
   return (
     <SidePanel variant="left">
-      <div className="flex h-full flex-col">
-        <header className="shrink-0 border-b px-4 py-9">
-          <h2 className="text-2xl font-bold">Optimized Resume Builder (v2)</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            A local-first resume builder! Need a guide? AI is there to help you!
-          </p>
-        </header>
-
+      <header className="px-4 py-9">
+        <h1 className="text-h1 font-bold">Optimized Resume Builder (v2)</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          A local-first resume builder! Need a guide? AI is there to help you!
+        </p>
+      </header>
+      <div className="border-y border-foreground divide-y divide-foreground overflow-auto">
         <EditorPanelSection title="Personal">
-          <fieldset>
-            <legend className="text-h3-desktop">Basic Information</legend>
+          <EditorPanelFieldset>
+            <EditorPanelLegend>Basic Information</EditorPanelLegend>
             <InputField
               id="full-name"
               name="full-name"
@@ -71,8 +72,9 @@ export default function EditorPanel() {
               placeholder="github.com/JohnDoe"
               type="url"
             />
-          </fieldset>
+          </EditorPanelFieldset>
         </EditorPanelSection>
+
         <EditorPanelSection title="Summary">
           <EditorPanelFieldset>
             <TextareaField
@@ -81,6 +83,35 @@ export default function EditorPanel() {
               label="Profile Summary"
               placeholder="A brief summary of your professional background and goals."
             />
+          </EditorPanelFieldset>
+        </EditorPanelSection>
+        <EditorPanelSection title="Experience">
+          <EditorPanelFieldset>
+            <EditorPanelLegend>Experience</EditorPanelLegend>
+            <InputField
+              id="experience-1"
+              name="experience-1"
+              label="Experience Role"
+              placeholder="Experience Name"
+              required
+            />
+            <InputField
+              id="experience-1"
+              name="experience-1"
+              label="Company Name"
+              placeholder="Experience Name"
+              required
+            />
+            <InputField
+              id="experience-1"
+              name="experience-1"
+              label="Company Name"
+              placeholder="Experience Name"
+              required
+            />
+            <Button variant="Primary" className="w-full">
+              Add Experience
+            </Button>
           </EditorPanelFieldset>
         </EditorPanelSection>
       </div>

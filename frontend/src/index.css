@@ -46,92 +46,30 @@ body {
   --color-warning: var(--warning);
   --color-error: var(--error);
 
-  /* Major Second Type Scale */
-  --text-display-mobile: 2.027rem;
-  --text-display-mobile_line-height: 2.4rem;
-  --text-display-mobile_letter-spacing: 0;
-
-  --text-display-tablet: 2.027rem;
-  --text-display-tablet_line-height: 2.4rem;
-  --text-display-tablet_letter-spacing: 0;
-
-  --text-display-desktop: 2.027rem;
-  --text-display-desktop_line-height: 2.4rem;
-  --text-display-desktop_letter-spacing: 0;
 
   /* H1 */
-  --text-h1-mobile: 1.802rem;
-  --text-h1-mobile_line-height: 2.2rem;
-  --text-h1-mobile_letter-spacing: 0;
-
-  --text-h1-tablet: 1.802rem;
-  --text-h1-tablet_line-height: 2.2rem;
-  --text-h1-tablet_letter-spacing: 0;
-
-  --text-h1-desktop: 1.802rem;
-  --text-h1-desktop_line-height: 2.2rem;
-  --text-h1-desktop_letter-spacing: 0;
+  --text-h1: 1.424rem;
+  --text-h1-line-height: 1.4375rem;
 
   /* H2 */
-  --text-h2-mobile: 1.602rem;
-  --text-h2-mobile_line-height: 2rem;
-  --text-h2-mobile_letter-spacing: 0;
-
-  --text-h2-tablet: 1.602rem;
-  --text-h2-tablet_line-height: 2rem;
-  --text-h2-tablet_letter-spacing: 0;
-
-  --text-h2-desktop: 1.602rem;
-  --text-h2-desktop_line-height: 2rem;
-  --text-h2-desktop_letter-spacing: 0;
+  --text-h2: 1.266rem;
+  --text-h2-line-height: 1.25rem;
 
   /* H3 */
-  --text-h3-mobile: 1.424rem;
-  --text-h3-mobile_line-height: 1.75rem;
+  --text-h3: 1.125rem;
+  --text-h3-line-height: 1.125rem;
 
-  --text-h3-tablet: 1.424rem;
-  --text-h3-tablet_line-height: 1.75rem;
-
-  --text-h3-desktop: 1.424rem;
-  --text-h3-desktop_line-height: 1.75rem;
-
-  /* H4 */
-  --text-h4-mobile: 1.266rem;
-  --text-h4-mobile_line-height: 1.6rem;
-
-  --text-h4-tablet: 1.266rem;
-  --text-h4-tablet_line-height: 1.6rem;
-
-  --text-h4-desktop: 1.266rem;
-  --text-h4-desktop_line-height: 1.6rem;
-
-  /* Body Large */
-  --text-body-lg-mobile: 1.125rem;
-  --text-body-lg-mobile_line-height: 1.6rem;
-
-  --text-body-lg-tablet: 1.125rem;
-  --text-body-lg-tablet_line-height: 1.6rem;
-
-  --text-body-lg-desktop: 1.125rem;
-  --text-body-lg-desktop_line-height: 1.6rem;
-
-  /* Body Medium */
-  --text-body-md-mobile: 1rem;
-  --text-body-md-mobile_line-height: 1.5rem;
-
-  --text-body-md-tablet: 1rem;
-  --text-body-md-tablet_line-height: 1.5rem;
-
-  --text-body-md-desktop: 1rem;
-  --text-body-md-desktop_line-height: 1.5rem;
+  /* Body */
+  --text-body: 1rem;
+  --text-body-line-height: 1rem;
 
   /* Caption */
-  --text-caption-base: 0.889rem;
-  --text-caption-base_line-height: 1.25rem;
+  --text-caption: 0.889rem;
+  --text-caption-line-height: 0.875rem;
 
   /* Fine Print */
   --text-fine-base: 0.79rem;
-  --text-fine-base_line-height: 1.125rem;
+  --text-fine-base-line-height: 0.8125rem;
 
   /* Layout Spacing */
   --spacing-page-mobile: 1rem;
