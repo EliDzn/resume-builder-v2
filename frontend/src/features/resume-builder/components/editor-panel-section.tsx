@@ -1,5 +1,5 @@
 import { useId, useState, type ReactNode } from "react";
-import { ChevronsUp } from "lucide-react";
+import { ChevronsDown } from "lucide-react";
 
 type EditorPanelSectionProps = {
   title: string;
@@ -17,17 +17,17 @@ export default function EditorPanelSection({
 
   return (
     <section className="w-full border-y border-foreground">
-      <h3 className="m-0">
+      <h3 className="m-0 ">
         <button
           type="button"
-          className="flex w-full items-center justify-between p-4 text-left"
+          className="flex w-full items-center justify-between px-4 py-2 text-left hover:cursor-pointer"
           aria-expanded={isOpen}
           aria-controls={contentId}
           onClick={() => setIsOpen((open) => !open)}
         >
           <span className="text-h2-desktop font-semibold">{title}</span>
 
-          <ChevronsUp
+          <ChevronsDown
             aria-hidden="true"
             className={[
               "transition-transform duration-300 ease-out motion-reduce:transition-none",

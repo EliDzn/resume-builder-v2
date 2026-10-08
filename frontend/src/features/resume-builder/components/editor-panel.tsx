@@ -1,6 +1,8 @@
 import SidePanel from "./side-panel";
 import InputField from "@/components/ui/input-field";
+import TextareaField from "@/components/ui/textarea-field";
 import EditorPanelSection from "./editor-panel-section";
+import EditorPanelFieldset from "./editor-panel-fieldset";
 
 export default function EditorPanel() {
   return (
@@ -14,9 +16,8 @@ export default function EditorPanel() {
         </header>
 
         <EditorPanelSection title="Personal">
-          <fieldset className="space-y-3">
+          <fieldset>
             <legend className="text-h3-desktop">Basic Information</legend>
-
             <InputField
               id="full-name"
               name="full-name"
@@ -71,6 +72,16 @@ export default function EditorPanel() {
               type="url"
             />
           </fieldset>
+        </EditorPanelSection>
+        <EditorPanelSection title="Summary">
+          <EditorPanelFieldset>
+            <TextareaField
+              id="summary"
+              name="summary"
+              label="Profile Summary"
+              placeholder="A brief summary of your professional background and goals."
+            />
+          </EditorPanelFieldset>
         </EditorPanelSection>
       </div>
     </SidePanel>
