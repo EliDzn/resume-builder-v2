@@ -34,7 +34,7 @@ function ResizableHandle({
       data-slot="resizable-handle"
       aria-label="Resize panels"
       className={cn(
-        "relative flex shrink-0 grow-0 basis-px cursor-col-resize items-center justify-center bg-border transition-colors hover:bg-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring aria-[orientation=horizontal]:h-px aria-[orientation=horizontal]:w-full aria-[orientation=horizontal]:cursor-row-resize",
+        "relative flex shrink-0 grow-0 basis-px cursor-col-resize items-center justify-center transition-colors hover:bg-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring aria-[orientation=horizontal]:h-px aria-[orientation=horizontal]:w-full aria-[orientation=horizontal]:cursor-row-resize",
         className
       )}
       {...props}

@@ -10,7 +10,7 @@ type EditorPanelSectionProps = {
 export default function EditorPanelSection({
   title,
   children,
-  defaultOpen = true
+  defaultOpen = false
 }: EditorPanelSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const contentId = useId();

@@ -5,6 +5,7 @@ import {
 } from "@/components/ui/resizable";
 
 import Header from "@/components/layout/header";
+import Footer from "@/components/layout/footer";
 import EditorPanel from "../components/editor-panel";
 import PreviewPanel from "../components/preview-panel";
 import InsightPanel from "../components/insight-panel";
@@ -43,6 +44,7 @@ export default function ResumeBuilderLayout() {
           <InsightPanel />
         </ResizablePanel>
       </ResizablePanelGroup>
+      <Footer />
     </main>
   );
 }

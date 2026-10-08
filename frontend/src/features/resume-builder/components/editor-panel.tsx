@@ -5,8 +5,10 @@ import EditorPanelSection from "./editor-panel-section";
 import EditorPanelFieldset from "./editor-panel-fieldset";
 import EditorPanelLegend from "./editor-panel-legend";
 import Button from "@/components/ui/button";
+import { useOverflowDetect } from "../hooks/use-overflow";
 
 export default function EditorPanel() {
+  const { ref: scrollRef, isOverflowing } = useOverflowDetect<HTMLDivElement>();
   return (
     <SidePanel variant="left">
       <header className="px-4 py-9">
@@ -15,8 +17,15 @@ export default function EditorPanel() {
           A local-first resume builder! Need a guide? AI is there to help you!
         </p>
       </header>
-      <div className="border-y border-foreground divide-y divide-foreground overflow-auto">
-        <EditorPanelSection title="Personal">
+      <div
+        ref={scrollRef}
+        className={[
+          "divide-y divide-foreground overflow-auto",
+          isOverflowing ? "border-t" : "border-y",
+          "border-foreground"
+        ].join(" ")}
+      >
+        <EditorPanelSection title="Personal" defaultOpen={true}>
           <EditorPanelFieldset>
             <EditorPanelLegend>Basic Information</EditorPanelLegend>
             <InputField
@@ -89,9 +98,9 @@ export default function EditorPanel() {
           <EditorPanelFieldset>
             <EditorPanelLegend>Experience</EditorPanelLegend>
             <InputField
-              id="experience-1"
-              name="experience-1"
-              label="Experience Role"
+              id="occupation-1"
+              name="occupation-1"
+              label="Occupation Role"
               placeholder="Experience Name"
               required
             />
@@ -111,6 +120,64 @@ export default function EditorPanel() {
             />
             <Button variant="Primary" className="w-full">
               Add Experience
+            </Button>
+          </EditorPanelFieldset>
+        </EditorPanelSection>
+        <EditorPanelSection title="Projects">
+          <EditorPanelFieldset>
+            <EditorPanelLegend>Project 1</EditorPanelLegend>
+            <InputField
+              id="project-1"
+              name="project-1"
+              label="Project Name"
+              placeholder="Project Name"
+              required
+            />
+            <InputField
+              id="project-1"
+              name="project-1"
+              label="Tech Stack"
+              placeholder="Tech Stack"
+              required
+            />
+            <TextareaField
+              id="project-bullet"
+              name="project-1"
+              label="Project Description"
+              placeholder="Project Description"
+              required
+            />
+
+            <Button variant="Primary" className="w-full">
+              Add Project
+            </Button>
+          </EditorPanelFieldset>
+        </EditorPanelSection>
+        <EditorPanelSection title="Certifications">
+          <EditorPanelFieldset>
+            <EditorPanelLegend>Project 1</EditorPanelLegend>
+            <InputField
+              id="cert-provider-1"
+              name="certification-1"
+              label="Provider"
+              placeholder="Provider"
+            />
+            <InputField
+              id="cert-title-1"
+              name="cert-title-1"
+              label="Certification Title"
+              placeholder="Certification Title"
+            />
+            <InputField
+              id="cert-title-1"
+              name="cert-title-1"
+              label="Date Completed"
+              placeholder="Date Completed"
+              type="month"
+            />
+
+            <Button variant="Primary" className="w-full">
+              Add Certification
             </Button>
           </EditorPanelFieldset>
         </EditorPanelSection>

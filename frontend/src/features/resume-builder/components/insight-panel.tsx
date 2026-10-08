@@ -17,7 +17,7 @@ export default function InsightPanel() {
         <h2 className="text-h2 font-semibold">Job Details</h2>
         <TextareaField
           label="Job Description"
-          placeholder="Enter job details here..."
+          placeholder="Copy and paste the job description here to tailor your resume to the job requirements"
         />
       </div>
     </SidePanel>
