@@ -19,6 +19,8 @@ const buttonVariants = cva(
           "bg-foreground text-background hover:bg-subtle hover:text-strong active:bg-strong active:text-background font-medium",
         Secondary:
           "border border-foreground text-foreground hover:bg-strong hover:text-background hover:border-strong active:bg-muted active:text-background active:border-muted font-medium",
+        Ghost:
+          "text-foreground hover:bg-strong hover:text-background hover:border-strong active:bg-muted active:text-background active:border-muted font-semibold",
         Disabled: "cursor-not-allowed bg-default text-background"
       }
     },

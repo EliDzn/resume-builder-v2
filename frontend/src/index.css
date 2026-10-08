@@ -68,8 +68,8 @@ body {
   --text-caption-line-height: 0.875rem;
 
   /* Fine Print */
-  --text-fine-base: 0.79rem;
-  --text-fine-base-line-height: 0.8125rem;
+  --text-fine-print: 0.79rem;
+  --text-fine-print-line-height: 0.8125rem;
 
   /* Layout Spacing */
   --spacing-page-mobile: 1rem;

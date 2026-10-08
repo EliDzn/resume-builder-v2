@@ -1,3 +1,5 @@
+import Badge from "@/components/ui/badge";
+
 type EditorPanelLegendProps = {
   children: React.ReactNode;
 };
@@ -10,6 +12,10 @@ export default function EditorPanelLegend({
       <div className="flex flex-row items-center text-strong font-semibold gap-2 w-full">
         <span>{children}</span>
         <span aria-hidden="true" className="flex-1 border-t border-strong" />
+        <div className="flex flex-row gap-1">
+          <Badge variant="Secondary">Clear</Badge>
+          <Badge variant="Secondary">Delete</Badge>
+        </div>
       </div>
     </legend>
   );

@@ -6,6 +6,7 @@ import EditorPanelFieldset from "./editor-panel-fieldset";
 import EditorPanelLegend from "./editor-panel-legend";
 import Button from "@/components/ui/button";
 import { useOverflowDetect } from "../hooks/use-overflow";
+import { GripVertical } from "lucide-react";
 
 export default function EditorPanel() {
   const { ref: scrollRef, isOverflowing } = useOverflowDetect<HTMLDivElement>();
@@ -26,8 +27,7 @@ export default function EditorPanel() {
         ].join(" ")}
       >
         <EditorPanelSection title="Personal" defaultOpen={true}>
-          <EditorPanelFieldset>
-            <EditorPanelLegend>Basic Information</EditorPanelLegend>
+          <EditorPanelFieldset legend="Basic Information">
             <InputField
               id="full-name"
               name="full-name"
@@ -96,7 +96,7 @@ export default function EditorPanel() {
         </EditorPanelSection>
         <EditorPanelSection title="Experience">
           <EditorPanelFieldset>
-            <EditorPanelLegend>Experience</EditorPanelLegend>
+            <EditorPanelLegend>Experience 1</EditorPanelLegend>
             <InputField
               id="occupation-1"
               name="occupation-1"
@@ -111,14 +111,29 @@ export default function EditorPanel() {
               placeholder="Experience Name"
               required
             />
+            <div className="w-full flex flex-row gap-2">
+              <InputField
+                id="experience-1"
+                name="experience-1"
+                label="Start Date"
+                placeholder="Experience Name"
+                type="month"
+              />
+              <InputField
+                id="experience-1"
+                name="experience-1"
+                label="End Date"
+                placeholder="Experience Name"
+                type="month"
+              />
+            </div>
             <InputField
               id="experience-1"
               name="experience-1"
-              label="Company Name"
+              label="Bullet 1"
               placeholder="Experience Name"
-              required
             />
-            <Button variant="Primary" className="w-full">
+            <Button variant="Ghost" className="w-full">
               Add Experience
             </Button>
           </EditorPanelFieldset>
@@ -126,6 +141,7 @@ export default function EditorPanel() {
         <EditorPanelSection title="Projects">
           <EditorPanelFieldset>
             <EditorPanelLegend>Project 1</EditorPanelLegend>
+
             <InputField
               id="project-1"
               name="project-1"
@@ -143,12 +159,12 @@ export default function EditorPanel() {
             <TextareaField
               id="project-bullet"
               name="project-1"
-              label="Project Description"
-              placeholder="Project Description"
+              label="Project Bullet 1"
+              placeholder="Implemented X by Y through Z"
               required
             />
 
-            <Button variant="Primary" className="w-full">
+            <Button variant="Ghost" className="w-full">
               Add Project
             </Button>
           </EditorPanelFieldset>
@@ -176,10 +192,18 @@ export default function EditorPanel() {
               type="month"
             />
 
-            <Button variant="Primary" className="w-full">
+            <Button variant="Ghost" className="w-full">
               Add Certification
             </Button>
           </EditorPanelFieldset>
+        </EditorPanelSection>
+        <EditorPanelSection title="Ordering">
+          <div className="flex flex-row gap-2 w-full border-2 border-default rounded-xs text-medium py-2">
+            <button className="text-default active:text-foreground">
+              <GripVertical />
+            </button>
+            Test Section
+          </div>
         </EditorPanelSection>
       </div>
     </SidePanel>
