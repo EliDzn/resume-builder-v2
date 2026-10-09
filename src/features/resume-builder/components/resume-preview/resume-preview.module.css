@@ -1,0 +1,75 @@
+.paper {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 40px;
+  background: #ffffff;
+  color: #202124;
+  font-family: Arial, sans-serif;
+  font-size: 10pt;
+  line-height: 1.4;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+}
+
+.header {
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #202124;
+}
+
+.header h1 {
+  margin: 0 0 4px;
+  font-size: 24pt;
+}
+
+.role {
+  margin: 0 0 8px;
+  color: #555555;
+  font-size: 12pt;
+}
+
+.contact,
+.muted {
+  margin: 0;
+  color: #555555;
+  font-size: 9pt;
+}
+
+.section {
+  margin-bottom: 18px;
+}
+
+.section h2 {
+  margin: 0 0 8px;
+  font-size: 13pt;
+  text-transform: uppercase;
+}
+
+.entry {
+  margin-bottom: 12px;
+}
+
+.entryHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.entry h3 {
+  margin: 0;
+  font-size: 11pt;
+}
+
+.bullets {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+@media print {
+  .paper {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0;
+    box-shadow: none;
+  }
+}

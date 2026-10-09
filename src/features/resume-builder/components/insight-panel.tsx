@@ -5,7 +5,7 @@ import TextareaField from "@/components/ui/textarea-field";
 export default function InsightPanel() {
   return (
     <SidePanel variant="right">
-      <div className="flex flex-row px-4 py-2 gap-2">
+      <div className="flex flex-row px-4 pt-4 pb-2 gap-2">
         <Button variant="Secondary" className="flex-1">
           Generate Insights
         </Button>

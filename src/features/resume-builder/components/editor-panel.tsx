@@ -44,7 +44,7 @@ export default function EditorPanel() {
         ].join(" ")}
       >
         <EditorPanelSection title="Personal">
-          <EditorPanelFieldset hasLegend={false}>
+          <EditorPanelFieldset>
             <InputField
               id="full-name"
               name="fullName"
@@ -128,7 +128,7 @@ export default function EditorPanel() {
         </EditorPanelSection>
 
         <EditorPanelSection title="Summary">
-          <EditorPanelFieldset hasLegend={false}>
+          <EditorPanelFieldset>
             <TextareaField
               id="summary"
               name="summary"
