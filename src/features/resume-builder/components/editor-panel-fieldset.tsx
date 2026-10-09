@@ -13,7 +13,7 @@ export default function EditorPanelFieldset({
 }: EditorPanelFieldsetProps) {
   return (
     <fieldset
-      className="mb-4 flex min-w-0 flex-col gap-3"
+      className="mb-4 flex min-w-0 flex-col gap-6"
       onDragOver={onDragOver}
       onDrop={onDrop}
     >

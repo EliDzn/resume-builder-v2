@@ -12,7 +12,7 @@ export default function InputField({
   ...props
 }: InputFieldProps) {
   return (
-    <div className="group flex flex-col gap-0.5 w-full">
+    <div className="group flex flex-col gap-1 w-full">
       <Label htmlFor={id} required={required}>
         {label}
       </Label>

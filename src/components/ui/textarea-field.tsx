@@ -12,7 +12,7 @@ export default function TextareaField({
   ...props
 }: TextareaFieldProps) {
   return (
-    <div className="group flex w-full flex-col gap-0.5">
+    <div className="group flex w-full flex-col  gap-1">
       <Label htmlFor={id} required={required}>
         {label}
       </Label>
