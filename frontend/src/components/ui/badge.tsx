@@ -2,7 +2,7 @@ import React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
 const badgeVariants = cva(
-  "text-fine-print inline-flex items-center justify-center py-0.5 px-2 font-semibold transition-colors duration-200 ease-out",
+  "text-fine-print inline-flex items-center justify-center py-1 px-2 font-semibold transition-colors duration-200 ease-out",
   {
     variants: {
       variant: {
@@ -33,9 +33,7 @@ export default function Badge({
   return (
     <button
       type={type}
-      className={`${badgeVariants({ variant })}
-       ${className ?? ""}
-       `}
+      className={`${badgeVariants({ variant })} ${className ?? ""}`}
       {...props}
     >
       {children}

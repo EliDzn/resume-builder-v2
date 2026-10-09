@@ -57,19 +57,19 @@ body {
 
   /* H3 */
   --text-h3: 1.125rem;
-  --text-h3-line-height: 1.125rem;
+  --text-h3--line-height: 1.125rem;
 
   /* Body */
   --text-body: 1rem;
-  --text-body-line-height: 1rem;
+  --text-body--line-height: 1rem;
 
   /* Caption */
   --text-caption: 0.889rem;
-  --text-caption-line-height: 0.875rem;
+  --text-caption--line-height: 0.875rem;
 
   /* Fine Print */
   --text-fine-print: 0.79rem;
-  --text-fine-print-line-height: 0.8125rem;
+  --text-fine-print--line-height: 0.8125rem;
 
   /* Layout Spacing */
   --spacing-page-mobile: 1rem;

@@ -1,34 +1,22 @@
-import EditorPanelLegend from "./editor-panel-legend";
+import type { ReactNode } from "react";
 
 type EditorPanelFieldsetProps = {
-  hasLegend?: boolean;
-  legend?: string;
-  isDraggable?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
   onDragOver?: React.DragEventHandler<HTMLFieldSetElement>;
   onDrop?: React.DragEventHandler<HTMLFieldSetElement>;
 };
 
 export default function EditorPanelFieldset({
-  hasLegend = true,
-  legend,
-  isDraggable = false,
   children,
   onDragOver,
   onDrop
 }: EditorPanelFieldsetProps) {
   return (
     <fieldset
-      className="mb-8 flex flex-col gap-3 border-b pb-4"
+      className="mb-4 flex min-w-0 flex-col gap-3"
       onDragOver={onDragOver}
       onDrop={onDrop}
     >
-      {hasLegend && (
-        <EditorPanelLegend isDraggable={isDraggable}>
-          {legend}
-        </EditorPanelLegend>
-      )}
-
       {children}
     </fieldset>
   );

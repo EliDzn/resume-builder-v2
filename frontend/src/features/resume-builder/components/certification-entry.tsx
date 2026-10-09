@@ -1,6 +1,6 @@
 import InputField from "@/components/ui/input-field";
-import Button from "@/components/ui/button";
 import EditorPanelFieldset from "./editor-panel-fieldset";
+import EditorPanelLegend from "./editor-panel-legend";
 import { useResumeStore } from "../state/resume-store";
 import type { Certification } from "../model/resume-type";
 
@@ -27,26 +27,13 @@ export default function CertificationEntry({
   };
 
   return (
-    <EditorPanelFieldset hasLegend={false}>
-      <legend className="mb-1 flex w-full items-center gap-2 text-strong">
-        <span className="font-semibold">
-          {certification.title || "Certification"}
-        </span>
-
-        <span aria-hidden="true" className="flex-1 border-t border-strong" />
-
-        <Button type="button" variant="Secondary" onClick={clearCertification}>
-          Clear
-        </Button>
-
-        <Button
-          type="button"
-          variant="Secondary"
-          onClick={() => removeCertification(certification.id)}
-        >
-          Delete
-        </Button>
-      </legend>
+    <EditorPanelFieldset>
+      <EditorPanelLegend
+        onClear={clearCertification}
+        onDelete={() => removeCertification(certification.id)}
+      >
+        {certification.title || "Certification"}
+      </EditorPanelLegend>
 
       <InputField
         id={`${certification.id}-provider`}

@@ -1,7 +1,6 @@
-import { GripVertical } from "lucide-react";
 import InputField from "@/components/ui/input-field";
-import Button from "@/components/ui/button";
 import EditorPanelFieldset from "./editor-panel-fieldset";
+import EditorPanelLegend from "./editor-panel-legend";
 import BulletList from "./bullet-list";
 import { useResumeStore } from "../state/resume-store";
 import type { Experience } from "../model/resume-type";
@@ -22,6 +21,7 @@ export default function ExperienceEntry({ experience }: ExperienceEntryProps) {
   const removeExperienceBullet = useResumeStore(
     (state) => state.removeExperienceBullet
   );
+  const moveExperience = useResumeStore((state) => state.moveExperience);
 
   const clearExperience = () => {
     updateExperience(experience.id, {
@@ -38,49 +38,27 @@ export default function ExperienceEntry({ experience }: ExperienceEntryProps) {
 
     const activeId = event.dataTransfer.getData("text/plain");
 
-    if (!activeId || activeId === experience.id) {
-      return;
+    if (activeId && activeId !== experience.id) {
+      moveExperience(activeId, experience.id);
     }
-
-    useResumeStore.getState().moveExperience(activeId, experience.id);
   };
 
   return (
     <EditorPanelFieldset
-      hasLegend={false}
       onDragOver={(event) => event.preventDefault()}
       onDrop={handleDrop}
     >
-      <legend className="mb-1 flex w-full items-center gap-2 text-strong">
-        <button
-          type="button"
-          draggable
-          aria-label={`Drag ${experience.role || "experience"} entry`}
-          className="cursor-grab text-muted-foreground active:cursor-grabbing"
-          onDragStart={(event) => {
-            event.dataTransfer.effectAllowed = "move";
-            event.dataTransfer.setData("text/plain", experience.id);
-          }}
-        >
-          <GripVertical aria-hidden="true" className="h-5 w-5" />
-        </button>
-
-        <span className="font-semibold">{experience.role || "Experience"}</span>
-
-        <span aria-hidden="true" className="flex-1 border-t border-strong" />
-
-        <Button type="button" variant="Secondary" onClick={clearExperience}>
-          Clear
-        </Button>
-
-        <Button
-          type="button"
-          variant="Secondary"
-          onClick={() => removeExperience(experience.id)}
-        >
-          Delete
-        </Button>
-      </legend>
+      <EditorPanelLegend
+        variant="draggable"
+        onClear={clearExperience}
+        onDelete={() => removeExperience(experience.id)}
+        onDragStart={(event) => {
+          event.dataTransfer.effectAllowed = "move";
+          event.dataTransfer.setData("text/plain", experience.id);
+        }}
+      >
+        {experience.role || "Experience"}
+      </EditorPanelLegend>
 
       <InputField
         id={`${experience.id}-role`}

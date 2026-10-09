@@ -27,16 +27,14 @@ export default function BulletList({
             onChange={(event) => onChange(index, event.target.value)}
           />
 
-          <Button
-            type="button"
-            variant="Secondary"
+          <button
             disabled={bullets.length === 1}
-            className="shrink-0 px-3"
+            className="border-2 border-default rounded-xs text-default hover:bg-strong hover:text-background hover:border-strong active:bg-muted active:text-background active:border-muted hover:cursor-pointer py-2.5 px-2.5"
             aria-label={`Remove bullet ${index + 1}`}
             onClick={() => onRemove(index)}
           >
-            <Trash2 aria-hidden="true" className="h-4 w-4" />
-          </Button>
+            <Trash2 aria-hidden="true" size={20} />
+          </button>
         </div>
       ))}
 
