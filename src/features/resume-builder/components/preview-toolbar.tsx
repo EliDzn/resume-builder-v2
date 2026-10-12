@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { useResumeStore } from "../state/resume-store";
+import type { ResumeFont } from "../model/resume-type";
 
 type PreviewToolbarButtonProps = {
   children: ReactNode;
@@ -28,6 +30,27 @@ function PreviewToolbarButtonGroup({
   );
 }
 
+function PreviewToolbarSelect() {
+  const fontFamily = useResumeStore((state) => state.fontFamily);
+  const updateFontFamily = useResumeStore((state) => state.updateFontFamily);
+
+  return (
+    <label className="flex items-center border-foreground px-3 h-full">
+      <span className="sr-only">Resume font</span>
+
+      <select
+        value={fontFamily}
+        aria-label="Resume font"
+        className="bg-transparent text-sm text-strong outline-none"
+        onChange={(event) => updateFontFamily(event.target.value as ResumeFont)}
+      >
+        <option value="inter">Inter</option>
+        <option value="times">Times New Roman</option>
+      </select>
+    </label>
+  );
+}
+
 export default function PreviewToolbar() {
   return (
     <div
@@ -39,9 +62,9 @@ export default function PreviewToolbar() {
         <PreviewToolbarButton>redo</PreviewToolbarButton>
       </PreviewToolbarButtonGroup>
       <PreviewToolbarButtonGroup className="border-l">
-        <PreviewToolbarButton>font</PreviewToolbarButton>
-        <PreviewToolbarButton>zoom in</PreviewToolbarButton>
+        <PreviewToolbarSelect />{" "}
         <PreviewToolbarButton>zoom out</PreviewToolbarButton>
+        <PreviewToolbarButton>zoom in</PreviewToolbarButton>
       </PreviewToolbarButtonGroup>
     </div>
   );

@@ -4,10 +4,13 @@ import type {
   Experience,
   PersonalInfo,
   Project,
-  ResumeData
+  ResumeData,
+  ResumeFont
 } from "../model/resume-type";
 
 type ResumeStore = ResumeData & {
+  updateFontFamily: (fontFamily: ResumeFont) => void;
+
   updatePersonal: (changes: Partial<PersonalInfo>) => void;
   updateSummary: (summary: string) => void;
 
@@ -102,11 +105,14 @@ function moveItem<T extends { id: string }>(
 }
 
 export const useResumeStore = create<ResumeStore>()((set) => ({
+  fontFamily: "inter",
   personal: initialPersonal,
   summary: "",
   experiences: [createEmptyExperience()],
   projects: [createEmptyProject()],
   certifications: [createEmptyCertification()],
+
+  updateFontFamily: (fontFamily) => set({ fontFamily }),
 
   updatePersonal: (changes) =>
     set((state) => ({

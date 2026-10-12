@@ -31,7 +31,7 @@ export default function EditorPanel() {
         <h1 className="text-h1 font-bold">Optimized Resume Builder (v2)</h1>
 
         <p className="mt-1 text-sm text-muted-foreground">
-          A local-first resume builder! Need a guide? AI is there to help you!
+          A local-first, resume builder tailored for the tech field!
         </p>
       </header>
 

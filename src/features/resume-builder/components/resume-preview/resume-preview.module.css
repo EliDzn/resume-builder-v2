@@ -2,37 +2,41 @@
   width: 210mm;
   min-height: 297mm;
   margin: 0 auto;
-  padding: 40px;
+  padding: 24px;
   background: #ffffff;
-  color: #202124;
-  font-family: Arial, sans-serif;
-  font-size: 10pt;
-  line-height: 1.4;
+  font-size: 11px;
   box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
 }
 
+.paper[data-font="inter"] {
+  font-family: var(--font-resume-inter);
+}
+
+.paper[data-font="times"] {
+  font-family: var(--font-resume-times);
+}
+
 .header {
-  margin-bottom: 24px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #202124;
+  text-align: center;
 }
 
 .header h1 {
-  margin: 0 0 4px;
-  font-size: 24pt;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.sectionTitle {
+  border-bottom: 1px solid #202124;
 }
 
 .role {
-  margin: 0 0 8px;
-  color: #555555;
-  font-size: 12pt;
+  font-size: 14px;
 }
 
 .contact,
 .muted {
   margin: 0;
-  color: #555555;
-  font-size: 9pt;
+  font-size: 11px;
 }
 
 .section {
@@ -40,8 +44,9 @@
 }
 
 .section h2 {
-  margin: 0 0 8px;
-  font-size: 13pt;
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
@@ -52,17 +57,34 @@
 .entryHeader {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: 8px;
 }
 
-.entry h3 {
+.entryHeader h3 {
   margin: 0;
-  font-size: 11pt;
+  font-weight:700;
 }
 
-.bullets {
-  margin: 4px 0 0;
-  padding-left: 18px;
+.entryHeader span {
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.subEntry {
+  margin: 0;
+  font-size: 11px;
+  font-style: italic;
+}
+
+.bullets li {
+  margin-bottom: 2px;
+}
+
+.certEntry {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
 }
 
 @media print {

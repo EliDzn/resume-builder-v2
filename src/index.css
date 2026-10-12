@@ -1,4 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap");
+
+@import "@fontsource-variable/inter";
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -18,6 +20,10 @@ body {
 }
 
 :root {
+  --font-ui: "Inter", system-ui, sans-serif;
+  --font-resume-inter: "Inter", system-ui, sans-serif;
+  --font-resume-times: "Times New Roman", Times, serif;
+
   --background: oklch(0.982 0.002 247.839);
   --subtle: oklch(0.911 0.007 247.901);
   --muted: oklch(0.591 0.026 250.237);
@@ -85,7 +91,7 @@ body {
   html {
     font-size: 16px;
     scroll-behavior: smooth;
-    font-family: var(--font-sans);
+    font-family: var(--font-ui);
     @apply font-sans;
   }
 
@@ -93,7 +99,7 @@ body {
     min-height: 100vh;
     background: var(--background);
     color: var(--foreground);
-    font-family: var(--font-sans);
+    font-family: var(--font-ui);
   }
 
   #root {

@@ -5,6 +5,25 @@ type ResumePreviewProps = {
   resume: ResumeData;
 };
 
+function formatMonthYear(value: string) {
+  if (!value) {
+    return "";
+  }
+
+  const [year, month] = value.split("-");
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    year: "numeric"
+  }).format(new Date(Number(year), Number(month) - 1));
+}
+
+function formatDateRange(startDate: string, endDate: string) {
+  return [formatMonthYear(startDate), formatMonthYear(endDate)]
+    .filter(Boolean)
+    .join(" - ");
+}
+
 function BulletList({ bullets }: { bullets: string[] }) {
   const visibleBullets = bullets.filter((bullet) => bullet.trim());
 
@@ -15,7 +34,7 @@ function BulletList({ bullets }: { bullets: string[] }) {
   return (
     <ul className={styles.bullets}>
       {visibleBullets.map((bullet, index) => (
-        <li key={`${bullet}-${index}`}>{bullet}</li>
+        <li key={`${bullet}-${index}`}>• {bullet}</li>
       ))}
     </ul>
   );
@@ -25,7 +44,7 @@ export default function ResumePreview({ resume }: ResumePreviewProps) {
   const { personal } = resume;
 
   return (
-    <article className={styles.paper}>
+    <div className={styles.paper}>
       <header className={styles.header}>
         <h1>{personal.fullName || "Your Name"}</h1>
 
@@ -40,80 +59,80 @@ export default function ResumePreview({ resume }: ResumePreviewProps) {
             personal.github
           ]
             .filter(Boolean)
-            .join(" • ")}
+            .join(" | ")}
         </p>
       </header>
 
       {resume.summary.trim() && (
         <section className={styles.section}>
-          <h2>Summary</h2>
+          <h2 className={styles.sectionTitle}>Summary</h2>
           <p>{resume.summary}</p>
         </section>
       )}
 
       {resume.experiences.length > 0 && (
         <section className={styles.section}>
-          <h2>Experience</h2>
+          <h2 className={styles.sectionTitle}>Experience</h2>
 
           {resume.experiences.map((experience) => (
-            <article className={styles.entry} key={experience.id}>
+            <div className={styles.entry} key={experience.id}>
               <div className={styles.entryHeader}>
-                <h3>{experience.role || "Untitled Role"}</h3>
+                <h3>{experience.company || "Untitled Company"}</h3>
 
                 <span>
-                  {[experience.startDate, experience.endDate]
-                    .filter(Boolean)
-                    .join(" - ")}
+                  {formatDateRange(experience.startDate, experience.endDate)}
                 </span>
               </div>
 
-              {experience.company && (
-                <p className={styles.muted}>{experience.company}</p>
+              {experience.role && (
+                <p className={styles.subEntry}>{experience.role}</p>
               )}
 
               <BulletList bullets={experience.bullets} />
-            </article>
+            </div>
           ))}
         </section>
       )}
 
       {resume.projects.length > 0 && (
         <section className={styles.section}>
-          <h2>Projects</h2>
+          <h2 className={styles.sectionTitle}>Projects</h2>
 
           {resume.projects.map((project) => (
-            <article className={styles.entry} key={project.id}>
-              <h3>{project.name || "Untitled Project"}</h3>
+            <div className={styles.entry} key={project.id}>
+              <div className={styles.entryHeader}>
+                <h3>{project.name || "Untitled Project"}</h3>
+              </div>
 
               {project.techStack && (
-                <p className={styles.muted}>{project.techStack}</p>
+                <p className={styles.subEntry}>{project.techStack}</p>
               )}
 
               <BulletList bullets={project.bullets} />
-            </article>
+            </div>
           ))}
         </section>
       )}
 
       {resume.certifications.length > 0 && (
         <section className={styles.section}>
-          <h2>Certifications</h2>
+          <h2 className={styles.sectionTitle}>Certifications</h2>
 
           {resume.certifications.map((certification) => (
-            <article className={styles.entry} key={certification.id}>
-              <div className={styles.entryHeader}>
-                <h3>{certification.title || "Certification"}</h3>
+            <div className={styles.entry} key={certification.id}>
+              <div className={styles.certEntry}>
+                <h3>
+                  {[certification.provider, certification.title]
+                    .filter(Boolean)
+                    .join(" ") || "Certification"}
+                </h3>
 
-                <span>{certification.completedDate}</span>
+                <span>{formatMonthYear(certification.completedDate)}</span>
               </div>
-
-              {certification.provider && (
-                <p className={styles.muted}>{certification.provider}</p>
-              )}
-            </article>
+            </div>
           ))}
         </section>
       )}
-    </article>
+    </div>
   );
 }

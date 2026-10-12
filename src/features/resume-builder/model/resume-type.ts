@@ -1,3 +1,5 @@
+export type ResumeFont = "inter" | "times";
+
 export type PersonalInfo = {
   fullName: string;
   role: string;
@@ -37,4 +39,5 @@ export type ResumeData = {
   experiences: Experience[];
   projects: Project[];
   certifications: Certification[];
+  fontFamily: ResumeFont;
 };
