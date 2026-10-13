@@ -44,7 +44,7 @@ export default function ResumePreview({ resume }: ResumePreviewProps) {
   const { personal } = resume;
 
   return (
-    <div className={styles.paper}>
+    <div className={styles.paper} data-font={resume.fontFamily}>
       <header className={styles.header}>
         <h1>{personal.fullName || "Your Name"}</h1>
 

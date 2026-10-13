@@ -4,11 +4,27 @@ import type { ResumeFont } from "../model/resume-type";
 
 type PreviewToolbarButtonProps = {
   children: ReactNode;
+  disabled?: boolean;
+  onClick?: () => void;
+  type?: "button" | "submit" | "reset";
+  ariaLabel?: string;
 };
 
-function PreviewToolbarButton({ children }: PreviewToolbarButtonProps) {
+function PreviewToolbarButton({
+  children,
+  disabled = false,
+  onClick,
+  type = "button",
+  ariaLabel
+}: PreviewToolbarButtonProps) {
   return (
-    <button className="p-4 hover:cursor-pointer hover:text-background hover:bg-foreground font-semibold duration-150 transform-color ease-out">
+    <button
+      type={type}
+      disabled={disabled}
+      onClick={onClick}
+      aria-label={ariaLabel}
+      className="p-4 font-semibold transition-colors duration-150 hover:cursor-pointer hover:bg-foreground hover:text-background disabled:cursor-not-allowed disabled:opacity-50"
+    >
       {children}
     </button>
   );
@@ -35,13 +51,13 @@ function PreviewToolbarSelect() {
   const updateFontFamily = useResumeStore((state) => state.updateFontFamily);
 
   return (
-    <label className="flex items-center border-foreground px-3 h-full">
+    <label className="flex h-full items-center border-foreground px-3">
       <span className="sr-only">Resume font</span>
 
       <select
         value={fontFamily}
         aria-label="Resume font"
-        className="bg-transparent text-sm text-strong outline-none"
+        className="text-strong outline-none font-semibold"
         onChange={(event) => updateFontFamily(event.target.value as ResumeFont)}
       >
         <option value="inter">Inter</option>
@@ -52,19 +68,42 @@ function PreviewToolbarSelect() {
 }
 
 export default function PreviewToolbar() {
+  const clearResume = useResumeStore((state) => state.clearResume);
+  const undo = useResumeStore((state) => state.undo);
+  const redo = useResumeStore((state) => state.redo);
+  const canUndo = useResumeStore((state) => state.past.length > 0);
+  const canRedo = useResumeStore((state) => state.future.length > 0);
+
   return (
     <div
       role="toolbar"
-      className="w-full bg-background flex flex-row justify-between border-b border-foreground"
+      className="flex w-full flex-row justify-between border-b border-foreground bg-background"
     >
       <PreviewToolbarButtonGroup className="border-r">
-        <PreviewToolbarButton>undo</PreviewToolbarButton>
-        <PreviewToolbarButton>redo</PreviewToolbarButton>
+        <PreviewToolbarButton
+          onClick={undo}
+          disabled={!canUndo}
+          ariaLabel="Undo"
+        >
+          undo
+        </PreviewToolbarButton>
+        <PreviewToolbarButton
+          onClick={redo}
+          disabled={!canRedo}
+          ariaLabel="Redo"
+        >
+          redo
+        </PreviewToolbarButton>
+        <PreviewToolbarButton onClick={clearResume} ariaLabel="Clear resume">
+          clear
+        </PreviewToolbarButton>
       </PreviewToolbarButtonGroup>
+
       <PreviewToolbarButtonGroup className="border-l">
-        <PreviewToolbarSelect />{" "}
-        <PreviewToolbarButton>zoom out</PreviewToolbarButton>
-        <PreviewToolbarButton>zoom in</PreviewToolbarButton>
+        <PreviewToolbarSelect />
+
+        <PreviewToolbarButton disabled>zoom out</PreviewToolbarButton>
+        <PreviewToolbarButton disabled>zoom in</PreviewToolbarButton>
       </PreviewToolbarButtonGroup>
     </div>
   );

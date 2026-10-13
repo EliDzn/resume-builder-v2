@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 import type {
   Certification,
   Experience,
@@ -8,11 +9,25 @@ import type {
   ResumeFont
 } from "../model/resume-type";
 
-type ResumeStore = ResumeData & {
-  updateFontFamily: (fontFamily: ResumeFont) => void;
+const DATABASE_NAME = "resume-builder-db";
+const OBJECT_STORE_NAME = "resume-storage";
+const STORAGE_KEY = "resume-builder-storage";
+const HISTORY_LIMIT = 30;
+const TYPING_HISTORY_DELAY = 750;
 
+type HistoryMode = "typing" | "discrete";
+
+type ResumeStore = ResumeData & {
+  hasHydrated: boolean;
+  past: ResumeData[];
+  future: ResumeData[];
+
+  updateFontFamily: (fontFamily: ResumeFont) => void;
   updatePersonal: (changes: Partial<PersonalInfo>) => void;
   updateSummary: (summary: string) => void;
+  clearResume: () => void;
+  undo: () => void;
+  redo: () => void;
 
   addExperience: () => void;
   updateExperience: (
@@ -47,6 +62,84 @@ type ResumeStore = ResumeData & {
     changes: Partial<Omit<Certification, "id">>
   ) => void;
   removeCertification: (id: string) => void;
+};
+
+function openDatabase(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DATABASE_NAME, 1);
+
+    request.onupgradeneeded = () => {
+      const database = request.result;
+
+      if (!database.objectStoreNames.contains(OBJECT_STORE_NAME)) {
+        database.createObjectStore(OBJECT_STORE_NAME);
+      }
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+const indexedDbStorage = {
+  async getItem(name: string) {
+    const database = await openDatabase();
+
+    return new Promise<string | null>((resolve, reject) => {
+      const transaction = database.transaction(OBJECT_STORE_NAME, "readonly");
+      const request = transaction.objectStore(OBJECT_STORE_NAME).get(name);
+
+      request.onsuccess = () => {
+        database.close();
+        resolve(request.result ?? null);
+      };
+
+      request.onerror = () => {
+        database.close();
+        reject(request.error);
+      };
+    });
+  },
+
+  async setItem(name: string, value: string) {
+    const database = await openDatabase();
+
+    return new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction(OBJECT_STORE_NAME, "readwrite");
+
+      transaction.objectStore(OBJECT_STORE_NAME).put(value, name);
+
+      transaction.oncomplete = () => {
+        database.close();
+        resolve();
+      };
+
+      transaction.onerror = () => {
+        database.close();
+        reject(transaction.error);
+      };
+    });
+  },
+
+  async removeItem(name: string) {
+    const database = await openDatabase();
+
+    return new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction(OBJECT_STORE_NAME, "readwrite");
+
+      transaction.objectStore(OBJECT_STORE_NAME).delete(name);
+
+      transaction.oncomplete = () => {
+        database.close();
+        resolve();
+      };
+
+      transaction.onerror = () => {
+        database.close();
+        reject(transaction.error);
+      };
+    });
+  }
 };
 
 const createId = () => crypto.randomUUID();
@@ -84,6 +177,28 @@ const initialPersonal: PersonalInfo = {
   github: ""
 };
 
+function createInitialResumeData(): ResumeData {
+  return {
+    fontFamily: "inter",
+    personal: { ...initialPersonal },
+    summary: "",
+    experiences: [createEmptyExperience()],
+    projects: [createEmptyProject()],
+    certifications: [createEmptyCertification()]
+  };
+}
+
+function getResumeData(state: ResumeStore): ResumeData {
+  return {
+    personal: state.personal,
+    summary: state.summary,
+    experiences: state.experiences,
+    projects: state.projects,
+    certifications: state.certifications,
+    fontFamily: state.fontFamily
+  };
+}
+
 function moveItem<T extends { id: string }>(
   items: T[],
   activeId: string,
@@ -104,170 +219,315 @@ function moveItem<T extends { id: string }>(
   return nextItems;
 }
 
-export const useResumeStore = create<ResumeStore>()((set) => ({
-  fontFamily: "inter",
-  personal: initialPersonal,
-  summary: "",
-  experiences: [createEmptyExperience()],
-  projects: [createEmptyProject()],
-  certifications: [createEmptyCertification()],
+export const useResumeStore = create<ResumeStore>()(
+  persist(
+    (set) => {
+      let typingTimer: ReturnType<typeof setTimeout> | undefined;
+      let typingGroupOpen = false;
 
-  updateFontFamily: (fontFamily) => set({ fontFamily }),
+      const updateResume = (
+        updater: (resume: ResumeData) => ResumeData,
+        historyMode: HistoryMode = "discrete"
+      ) =>
+        set((state) => {
+          const currentResume = getResumeData(state);
+          const nextResume = updater(currentResume);
 
-  updatePersonal: (changes) =>
-    set((state) => ({
-      personal: {
-        ...state.personal,
-        ...changes
+          if (JSON.stringify(currentResume) === JSON.stringify(nextResume)) {
+            return state;
+          }
+
+          let nextPast = state.past;
+
+          if (historyMode === "discrete" || !typingGroupOpen) {
+            nextPast = [...state.past, currentResume].slice(-HISTORY_LIMIT);
+          }
+
+          if (historyMode === "typing") {
+            typingGroupOpen = true;
+
+            if (typingTimer) {
+              clearTimeout(typingTimer);
+            }
+
+            typingTimer = setTimeout(() => {
+              typingGroupOpen = false;
+              typingTimer = undefined;
+            }, TYPING_HISTORY_DELAY);
+          } else {
+            typingGroupOpen = false;
+
+            if (typingTimer) {
+              clearTimeout(typingTimer);
+              typingTimer = undefined;
+            }
+          }
+
+          return {
+            ...nextResume,
+            past: nextPast,
+            future: []
+          };
+        });
+
+      const closeTypingGroup = () => {
+        typingGroupOpen = false;
+
+        if (typingTimer) {
+          clearTimeout(typingTimer);
+          typingTimer = undefined;
+        }
+      };
+
+      return {
+        ...createInitialResumeData(),
+        hasHydrated: false,
+        past: [],
+        future: [],
+
+        updateFontFamily: (fontFamily) =>
+          updateResume((resume) => ({ ...resume, fontFamily })),
+
+        updatePersonal: (changes) =>
+          updateResume(
+            (resume) => ({
+              ...resume,
+              personal: { ...resume.personal, ...changes }
+            }),
+            "typing"
+          ),
+
+        updateSummary: (summary) =>
+          updateResume((resume) => ({ ...resume, summary }), "typing"),
+
+        clearResume: () => updateResume(() => createInitialResumeData()),
+
+        undo: () => {
+          closeTypingGroup();
+
+          set((state) => {
+            const previous = state.past[state.past.length - 1];
+
+            if (!previous) {
+              return state;
+            }
+
+            return {
+              ...previous,
+              past: state.past.slice(0, -1),
+              future: [getResumeData(state), ...state.future].slice(
+                0,
+                HISTORY_LIMIT
+              )
+            };
+          });
+        },
+
+        redo: () => {
+          closeTypingGroup();
+
+          set((state) => {
+            const next = state.future[0];
+
+            if (!next) {
+              return state;
+            }
+
+            return {
+              ...next,
+              past: [...state.past, getResumeData(state)].slice(-HISTORY_LIMIT),
+              future: state.future.slice(1)
+            };
+          });
+        },
+
+        addExperience: () =>
+          updateResume((resume) => ({
+            ...resume,
+            experiences: [...resume.experiences, createEmptyExperience()]
+          })),
+
+        updateExperience: (id, changes) =>
+          updateResume(
+            (resume) => ({
+              ...resume,
+              experiences: resume.experiences.map((experience) =>
+                experience.id === id
+                  ? { ...experience, ...changes }
+                  : experience
+              )
+            }),
+            "typing"
+          ),
+
+        removeExperience: (id) =>
+          updateResume((resume) => ({
+            ...resume,
+            experiences: resume.experiences.filter(
+              (experience) => experience.id !== id
+            )
+          })),
+
+        addExperienceBullet: (experienceId) =>
+          updateResume((resume) => ({
+            ...resume,
+            experiences: resume.experiences.map((experience) =>
+              experience.id === experienceId
+                ? { ...experience, bullets: [...experience.bullets, ""] }
+                : experience
+            )
+          })),
+
+        updateExperienceBullet: (experienceId, bulletIndex, value) =>
+          updateResume(
+            (resume) => ({
+              ...resume,
+              experiences: resume.experiences.map((experience) =>
+                experience.id === experienceId
+                  ? {
+                      ...experience,
+                      bullets: experience.bullets.map((bullet, index) =>
+                        index === bulletIndex ? value : bullet
+                      )
+                    }
+                  : experience
+              )
+            }),
+            "typing"
+          ),
+
+        removeExperienceBullet: (experienceId, bulletIndex) =>
+          updateResume((resume) => ({
+            ...resume,
+            experiences: resume.experiences.map((experience) =>
+              experience.id === experienceId
+                ? {
+                    ...experience,
+                    bullets: experience.bullets.filter(
+                      (_, index) => index !== bulletIndex
+                    )
+                  }
+                : experience
+            )
+          })),
+
+        moveExperience: (activeId, targetId) =>
+          updateResume((resume) => ({
+            ...resume,
+            experiences: moveItem(resume.experiences, activeId, targetId)
+          })),
+
+        addProject: () =>
+          updateResume((resume) => ({
+            ...resume,
+            projects: [...resume.projects, createEmptyProject()]
+          })),
+
+        updateProject: (id, changes) =>
+          updateResume(
+            (resume) => ({
+              ...resume,
+              projects: resume.projects.map((project) =>
+                project.id === id ? { ...project, ...changes } : project
+              )
+            }),
+            "typing"
+          ),
+
+        removeProject: (id) =>
+          updateResume((resume) => ({
+            ...resume,
+            projects: resume.projects.filter((project) => project.id !== id)
+          })),
+
+        addProjectBullet: (projectId) =>
+          updateResume((resume) => ({
+            ...resume,
+            projects: resume.projects.map((project) =>
+              project.id === projectId
+                ? { ...project, bullets: [...project.bullets, ""] }
+                : project
+            )
+          })),
+
+        updateProjectBullet: (projectId, bulletIndex, value) =>
+          updateResume(
+            (resume) => ({
+              ...resume,
+              projects: resume.projects.map((project) =>
+                project.id === projectId
+                  ? {
+                      ...project,
+                      bullets: project.bullets.map((bullet, index) =>
+                        index === bulletIndex ? value : bullet
+                      )
+                    }
+                  : project
+              )
+            }),
+            "typing"
+          ),
+
+        removeProjectBullet: (projectId, bulletIndex) =>
+          updateResume((resume) => ({
+            ...resume,
+            projects: resume.projects.map((project) =>
+              project.id === projectId
+                ? {
+                    ...project,
+                    bullets: project.bullets.filter(
+                      (_, index) => index !== bulletIndex
+                    )
+                  }
+                : project
+            )
+          })),
+
+        moveProject: (activeId, targetId) =>
+          updateResume((resume) => ({
+            ...resume,
+            projects: moveItem(resume.projects, activeId, targetId)
+          })),
+
+        addCertification: () =>
+          updateResume((resume) => ({
+            ...resume,
+            certifications: [
+              ...resume.certifications,
+              createEmptyCertification()
+            ]
+          })),
+
+        updateCertification: (id, changes) =>
+          updateResume(
+            (resume) => ({
+              ...resume,
+              certifications: resume.certifications.map((certification) =>
+                certification.id === id
+                  ? { ...certification, ...changes }
+                  : certification
+              )
+            }),
+            "typing"
+          ),
+
+        removeCertification: (id) =>
+          updateResume((resume) => ({
+            ...resume,
+            certifications: resume.certifications.filter(
+              (certification) => certification.id !== id
+            )
+          }))
+      };
+    },
+    {
+      name: STORAGE_KEY,
+      storage: createJSONStorage(() => indexedDbStorage),
+      version: 1,
+      partialize: (state) => getResumeData(state),
+      onRehydrateStorage: () => () => {
+        useResumeStore.setState({ hasHydrated: true });
       }
-    })),
-
-  updateSummary: (summary) => set({ summary }),
-
-  addExperience: () =>
-    set((state) => ({
-      experiences: [...state.experiences, createEmptyExperience()]
-    })),
-
-  updateExperience: (id, changes) =>
-    set((state) => ({
-      experiences: state.experiences.map((experience) =>
-        experience.id === id ? { ...experience, ...changes } : experience
-      )
-    })),
-
-  removeExperience: (id) =>
-    set((state) => ({
-      experiences: state.experiences.filter(
-        (experience) => experience.id !== id
-      )
-    })),
-
-  addExperienceBullet: (experienceId) =>
-    set((state) => ({
-      experiences: state.experiences.map((experience) =>
-        experience.id === experienceId
-          ? {
-              ...experience,
-              bullets: [...experience.bullets, ""]
-            }
-          : experience
-      )
-    })),
-
-  updateExperienceBullet: (experienceId, bulletIndex, value) =>
-    set((state) => ({
-      experiences: state.experiences.map((experience) =>
-        experience.id === experienceId
-          ? {
-              ...experience,
-              bullets: experience.bullets.map((bullet, index) =>
-                index === bulletIndex ? value : bullet
-              )
-            }
-          : experience
-      )
-    })),
-
-  removeExperienceBullet: (experienceId, bulletIndex) =>
-    set((state) => ({
-      experiences: state.experiences.map((experience) =>
-        experience.id === experienceId
-          ? {
-              ...experience,
-              bullets: experience.bullets.filter(
-                (_, index) => index !== bulletIndex
-              )
-            }
-          : experience
-      )
-    })),
-
-  moveExperience: (activeId, targetId) =>
-    set((state) => ({
-      experiences: moveItem(state.experiences, activeId, targetId)
-    })),
-
-  addProject: () =>
-    set((state) => ({
-      projects: [...state.projects, createEmptyProject()]
-    })),
-
-  updateProject: (id, changes) =>
-    set((state) => ({
-      projects: state.projects.map((project) =>
-        project.id === id ? { ...project, ...changes } : project
-      )
-    })),
-
-  removeProject: (id) =>
-    set((state) => ({
-      projects: state.projects.filter((project) => project.id !== id)
-    })),
-
-  addProjectBullet: (projectId) =>
-    set((state) => ({
-      projects: state.projects.map((project) =>
-        project.id === projectId
-          ? {
-              ...project,
-              bullets: [...project.bullets, ""]
-            }
-          : project
-      )
-    })),
-
-  updateProjectBullet: (projectId, bulletIndex, value) =>
-    set((state) => ({
-      projects: state.projects.map((project) =>
-        project.id === projectId
-          ? {
-              ...project,
-              bullets: project.bullets.map((bullet, index) =>
-                index === bulletIndex ? value : bullet
-              )
-            }
-          : project
-      )
-    })),
-
-  removeProjectBullet: (projectId, bulletIndex) =>
-    set((state) => ({
-      projects: state.projects.map((project) =>
-        project.id === projectId
-          ? {
-              ...project,
-              bullets: project.bullets.filter(
-                (_, index) => index !== bulletIndex
-              )
-            }
-          : project
-      )
-    })),
-
-  moveProject: (activeId, targetId) =>
-    set((state) => ({
-      projects: moveItem(state.projects, activeId, targetId)
-    })),
-
-  addCertification: () =>
-    set((state) => ({
-      certifications: [...state.certifications, createEmptyCertification()]
-    })),
-
-  updateCertification: (id, changes) =>
-    set((state) => ({
-      certifications: state.certifications.map((certification) =>
-        certification.id === id
-          ? { ...certification, ...changes }
-          : certification
-      )
-    })),
-
-  removeCertification: (id) =>
-    set((state) => ({
-      certifications: state.certifications.filter(
-        (certification) => certification.id !== id
-      )
-    }))
-}));
+    }
+  )
+);
