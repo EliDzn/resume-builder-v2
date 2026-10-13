@@ -12,7 +12,7 @@ import type {
 const DATABASE_NAME = "resume-builder-db";
 const OBJECT_STORE_NAME = "resume-storage";
 const STORAGE_KEY = "resume-builder-storage";
-const HISTORY_LIMIT = 30;
+const HISTORY_LIMIT = 20;
 const TYPING_HISTORY_DELAY = 750;
 
 type HistoryMode = "typing" | "discrete";

@@ -1,7 +1,12 @@
+import { useState, useEffect, useRef } from "react";
 import PreviewToolbar from "./preview-toolbar";
 import ResumePreview from "./resume-preview/resume-preview";
 import { useResumeStore } from "../state/resume-store";
 import type { ResumeData } from "../model/resume-type";
+
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 2;
+const ZOOM_STEP = 0.05;
 
 export default function PreviewPanel() {
   const personal = useResumeStore((state) => state.personal);
@@ -10,8 +15,36 @@ export default function PreviewPanel() {
   const projects = useResumeStore((state) => state.projects);
   const certifications = useResumeStore((state) => state.certifications);
   const fontFamily = useResumeStore((state) => state.fontFamily);
-
   const hasHydrated = useResumeStore((state) => state.hasHydrated);
+
+  const [zoom, setZoom] = useState(1);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!hasHydrated) return;
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+
+    const handleWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey) return;
+
+      event.preventDefault();
+      setZoom((current) =>
+        Math.min(
+          MAX_ZOOM,
+          Math.max(
+            MIN_ZOOM,
+            Number(
+              (current + (event.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP)).toFixed(2)
+            )
+          )
+        )
+      );
+    };
+
+    scroller.addEventListener("wheel", handleWheel, { passive: false });
+    return () => scroller.removeEventListener("wheel", handleWheel);
+  }, [hasHydrated]);
 
   const resume: ResumeData = {
     personal,
@@ -34,8 +67,11 @@ export default function PreviewPanel() {
     <section className="flex h-full min-h-0 w-full flex-col">
       <PreviewToolbar />
 
-      <div className="min-h-0 flex-1 overflow-auto bg-subtle p-8">
-        <ResumePreview resume={resume} />
+      <div
+        ref={scrollerRef}
+        className="min-h-0 flex-1 overflow-auto bg-subtle p-8"
+      >
+        <ResumePreview resume={resume} zoom={zoom} />
       </div>
     </section>
   );

@@ -3,6 +3,7 @@ import styles from "./resume-preview.module.css";
 
 type ResumePreviewProps = {
   resume: ResumeData;
+  zoom: number;
 };
 
 function formatMonthYear(value: string) {
@@ -40,11 +41,15 @@ function BulletList({ bullets }: { bullets: string[] }) {
   );
 }
 
-export default function ResumePreview({ resume }: ResumePreviewProps) {
+export default function ResumePreview({ resume, zoom }: ResumePreviewProps) {
   const { personal } = resume;
 
   return (
-    <div className={styles.paper} data-font={resume.fontFamily}>
+    <div
+      className={styles.paper}
+      data-font={resume.fontFamily}
+      style={{ zoom }}
+    >
       <header className={styles.header}>
         <h1>{personal.fullName || "Your Name"}</h1>
 
