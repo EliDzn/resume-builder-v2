@@ -23,6 +23,7 @@ export type Project = {
   id: string;
   name: string;
   techStack: string;
+  endDate: string;
   bullets: string[];
 };
 

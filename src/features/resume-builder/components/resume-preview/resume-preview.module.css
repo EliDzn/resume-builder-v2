@@ -1,10 +1,11 @@
 .paper {
-  width: 210mm;
-  min-height: 297mm;
+  box-sizing: border-box;
+  width: 8.5in;
+  min-height: 11in;
   margin: 0 auto;
   padding: 24px;
   background: #ffffff;
-  font-size: 11px;
+  font-size: 11pt;
   box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
 }
 
@@ -21,7 +22,7 @@
 }
 
 .header h1 {
-  font-size: 20px;
+  font-size: 20pt;
   font-weight: 700;
 }
 
@@ -30,13 +31,20 @@
 }
 
 .role {
-  font-size: 14px;
+  font-size: 14pt;
+}
+
+.contact {
+  font-size: 10.5pt
+}
+
+.muted {
+  font-size: 11pt
 }
 
 .contact,
 .muted {
   margin: 0;
-  font-size: 11px;
 }
 
 .section {
@@ -45,7 +53,7 @@
 
 .section h2 {
   margin: 0 0 4px;
-  font-size: 13px;
+  font-size: 11pt;
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -72,7 +80,7 @@
 
 .subEntry {
   margin: 0;
-  font-size: 11px;
+  font-size: 11pt;
   font-style: italic;
 }
 
@@ -88,9 +96,15 @@
 }
 
 @media print {
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
   .paper {
-    width: 210mm;
-    min-height: 297mm;
+    width: 8.5in;
+    min-height: 11in;
     margin: 0;
     box-shadow: none;
   }

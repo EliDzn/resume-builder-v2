@@ -7,9 +7,17 @@ import type { Experience } from "../model/resume-type";
 
 type ExperienceEntryProps = {
   experience: Experience;
+  index: number;
+  errors: Record<string, string>;
+  entryError?: string;
 };
 
-export default function ExperienceEntry({ experience }: ExperienceEntryProps) {
+export default function ExperienceEntry({
+  experience,
+  index,
+  errors,
+  entryError
+}: ExperienceEntryProps) {
   const updateExperience = useResumeStore((state) => state.updateExperience);
   const removeExperience = useResumeStore((state) => state.removeExperience);
   const addExperienceBullet = useResumeStore(
@@ -60,12 +68,19 @@ export default function ExperienceEntry({ experience }: ExperienceEntryProps) {
         {experience.role || "Experience"}
       </EditorPanelLegend>
 
+      {entryError && (
+        <p className="text-error text-caption" role="alert">
+          {entryError}
+        </p>
+      )}
+
       <InputField
         id={`${experience.id}-role`}
         name={`${experience.id}-role`}
         label="Occupation Role"
-        placeholder="Frontend Developer"
+        placeholder="Developer"
         value={experience.role}
+        error={errors[`experiences.${index}.role`] ?? ""}
         onChange={(event) =>
           updateExperience(experience.id, {
             role: event.target.value
@@ -79,6 +94,7 @@ export default function ExperienceEntry({ experience }: ExperienceEntryProps) {
         label="Company Name"
         placeholder="Company Name"
         value={experience.company}
+        error={errors[`experiences.${index}.company`] ?? ""}
         onChange={(event) =>
           updateExperience(experience.id, {
             company: event.target.value
@@ -93,6 +109,7 @@ export default function ExperienceEntry({ experience }: ExperienceEntryProps) {
           label="Start Date"
           type="month"
           value={experience.startDate}
+          error={errors[`experiences.${index}.startDate`] ?? ""}
           onChange={(event) =>
             updateExperience(experience.id, {
               startDate: event.target.value
@@ -106,6 +123,7 @@ export default function ExperienceEntry({ experience }: ExperienceEntryProps) {
           label="End Date"
           type="month"
           value={experience.endDate}
+          error={errors[`experiences.${index}.endDate`] ?? ""}
           onChange={(event) =>
             updateExperience(experience.id, {
               endDate: event.target.value
@@ -116,6 +134,10 @@ export default function ExperienceEntry({ experience }: ExperienceEntryProps) {
 
       <BulletList
         bullets={experience.bullets}
+        errors={experience.bullets.map(
+          (_, bulletIndex) =>
+            errors[`experiences.${index}.bullets.${bulletIndex}`] ?? ""
+        )}
         onAdd={() => addExperienceBullet(experience.id)}
         onChange={(index, value) =>
           updateExperienceBullet(experience.id, index, value)

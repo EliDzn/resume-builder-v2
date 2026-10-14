@@ -43,10 +43,9 @@ export interface Experience {
 export interface Project {
   id: string;
   name: string;
-  technologies?: string[];
-  startDate?: ResumeDate;
-  endDate: ResumeDate;
-  bullets: Bullet[];
+  techStack: string;
+  endDate?: string;
+  bullets: string[];
 }
 
 export interface Education {

@@ -9,6 +9,8 @@ import ProjectEntry from "./project-entry";
 import CertificationEntry from "./certification-entry";
 import { useOverflowDetect } from "../hooks/use-overflow";
 import { useResumeStore } from "../state/resume-store";
+import { resumeSchema } from "../model/resume-schema";
+import type { ResumeData } from "../model/resume-type";
 
 export default function EditorPanel() {
   const { ref: scrollRef, isOverflowing } = useOverflowDetect<HTMLDivElement>();
@@ -18,6 +20,7 @@ export default function EditorPanel() {
   const experiences = useResumeStore((state) => state.experiences);
   const projects = useResumeStore((state) => state.projects);
   const certifications = useResumeStore((state) => state.certifications);
+  const fontFamily = useResumeStore((state) => state.fontFamily);
 
   const updatePersonal = useResumeStore((state) => state.updatePersonal);
   const updateSummary = useResumeStore((state) => state.updateSummary);
@@ -25,13 +28,33 @@ export default function EditorPanel() {
   const addProject = useResumeStore((state) => state.addProject);
   const addCertification = useResumeStore((state) => state.addCertification);
 
+  const resume: ResumeData = {
+    personal,
+    summary,
+    experiences,
+    projects,
+    certifications,
+    fontFamily
+  };
+
+  const result = resumeSchema.safeParse(resume);
+  const errors: Record<string, string> = {};
+
+  if (!result.success) {
+    for (const issue of result.error.issues) {
+      const path = issue.path.join(".");
+      errors[path] ??= issue.message;
+    }
+  }
+
   return (
     <SidePanel variant="left">
       <header className="shrink-0 px-4 py-9">
         <h1 className="text-h1 font-bold">Optimized Resume Builder (v2)</h1>
 
         <p className="mt-1 text-sm text-muted-foreground">
-          A local-first, resume builder tailored for the tech field!
+          A local-first, resume builder based of the Harvard template resume
+          with built-in Gemini AI integration.
         </p>
       </header>
 
@@ -50,8 +73,10 @@ export default function EditorPanel() {
               name="fullName"
               label="Full name"
               placeholder="John Doe"
+              type="text"
               value={personal.fullName}
               required
+              error={errors["personal.fullName"] ?? ""}
               onChange={(event) =>
                 updatePersonal({ fullName: event.target.value })
               }
@@ -62,7 +87,9 @@ export default function EditorPanel() {
               name="role"
               label="Role"
               placeholder="Associate"
+              type="text"
               value={personal.role}
+              error=""
               onChange={(event) => updatePersonal({ role: event.target.value })}
             />
 
@@ -71,7 +98,9 @@ export default function EditorPanel() {
               name="location"
               label="Location"
               placeholder="Manila, Philippines"
+              type="text"
               value={personal.location}
+              error=""
               onChange={(event) =>
                 updatePersonal({ location: event.target.value })
               }
@@ -84,6 +113,7 @@ export default function EditorPanel() {
               placeholder="123-4567"
               type="tel"
               value={personal.phone}
+              error=""
               onChange={(event) =>
                 updatePersonal({ phone: event.target.value })
               }
@@ -96,6 +126,7 @@ export default function EditorPanel() {
               placeholder="john@email.com"
               type="email"
               value={personal.email}
+              error={errors["personal.email"] ?? ""}
               onChange={(event) =>
                 updatePersonal({ email: event.target.value })
               }
@@ -108,6 +139,7 @@ export default function EditorPanel() {
               placeholder="linkedin.com/in/john-doe"
               type="url"
               value={personal.linkedin}
+              error={errors["personal.linkedin"] ?? ""}
               onChange={(event) =>
                 updatePersonal({ linkedin: event.target.value })
               }
@@ -120,6 +152,7 @@ export default function EditorPanel() {
               placeholder="github.com/JohnDoe"
               type="url"
               value={personal.github}
+              error={errors["personal.github"] ?? ""}
               onChange={(event) =>
                 updatePersonal({ github: event.target.value })
               }
@@ -135,14 +168,21 @@ export default function EditorPanel() {
               label="Profile Summary"
               placeholder="A brief summary of your professional background and goals."
               value={summary}
+              error=""
               onChange={(event) => updateSummary(event.target.value)}
             />
           </EditorPanelFieldset>
         </EditorPanelSection>
 
         <EditorPanelSection title="Experience">
-          {experiences.map((experience) => (
-            <ExperienceEntry key={experience.id} experience={experience} />
+          {experiences.map((experience, index) => (
+            <ExperienceEntry
+              key={experience.id}
+              experience={experience}
+              index={index}
+              errors={errors}
+              entryError={errors[`experiences.${index}.dateRange`] ?? ""}
+            />
           ))}
 
           <Button
@@ -156,8 +196,13 @@ export default function EditorPanel() {
         </EditorPanelSection>
 
         <EditorPanelSection title="Projects">
-          {projects.map((project) => (
-            <ProjectEntry key={project.id} project={project} />
+          {projects.map((project, index) => (
+            <ProjectEntry
+              key={project.id}
+              project={project}
+              index={index}
+              errors={errors}
+            />
           ))}
 
           <Button
@@ -171,10 +216,12 @@ export default function EditorPanel() {
         </EditorPanelSection>
 
         <EditorPanelSection title="Certifications">
-          {certifications.map((certification) => (
+          {certifications.map((certification, index) => (
             <CertificationEntry
               key={certification.id}
               certification={certification}
+              index={index}
+              errors={errors}
             />
           ))}
 

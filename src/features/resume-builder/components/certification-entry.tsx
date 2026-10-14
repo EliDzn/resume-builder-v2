@@ -6,10 +6,14 @@ import type { Certification } from "../model/resume-type";
 
 type CertificationEntryProps = {
   certification: Certification;
+  index: number;
+  errors: Record<string, string>;
 };
 
 export default function CertificationEntry({
-  certification
+  certification,
+  index,
+  errors
 }: CertificationEntryProps) {
   const updateCertification = useResumeStore(
     (state) => state.updateCertification
@@ -41,6 +45,8 @@ export default function CertificationEntry({
         label="Provider"
         placeholder="Provider"
         value={certification.provider}
+        required
+        error={errors[`certifications.${index}.provider`] ?? ""}
         onChange={(event) =>
           updateCertification(certification.id, {
             provider: event.target.value
@@ -54,6 +60,8 @@ export default function CertificationEntry({
         label="Certification Title"
         placeholder="Certification Title"
         value={certification.title}
+        required
+        error={errors[`certifications.${index}.title`] ?? ""}
         onChange={(event) =>
           updateCertification(certification.id, {
             title: event.target.value
@@ -67,6 +75,8 @@ export default function CertificationEntry({
         label="Date Completed"
         type="month"
         value={certification.completedDate}
+        required
+        error={errors[`certifications.${index}.completedDate`] ?? ""}
         onChange={(event) =>
           updateCertification(certification.id, {
             completedDate: event.target.value

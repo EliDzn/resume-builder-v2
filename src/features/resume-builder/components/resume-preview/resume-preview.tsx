@@ -107,6 +107,7 @@ export default function ResumePreview({ resume, zoom }: ResumePreviewProps) {
             <div className={styles.entry} key={project.id}>
               <div className={styles.entryHeader}>
                 <h3>{project.name || "Untitled Project"}</h3>
+                <span>{formatMonthYear(project.endDate ?? "")}</span>
               </div>
 
               {project.techStack && (
@@ -124,7 +125,7 @@ export default function ResumePreview({ resume, zoom }: ResumePreviewProps) {
           <h2 className={styles.sectionTitle}>Certifications</h2>
 
           {resume.certifications.map((certification) => (
-            <div className={styles.entry} key={certification.id}>
+            <div key={certification.id}>
               <div className={styles.certEntry}>
                 <h3>
                   {[certification.provider, certification.title]

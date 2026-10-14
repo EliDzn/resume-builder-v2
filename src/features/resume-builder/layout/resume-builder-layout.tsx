@@ -16,7 +16,7 @@ export default function ResumeBuilderLayout() {
       <Header />
       <ResizablePanelGroup
         orientation="horizontal"
-        className="min-h-0 min-w-0 flex-1"
+        className="min-h-0 min-w-0 flex-1 print:hidden"
       >
         <ResizablePanel
           defaultSize="25%"

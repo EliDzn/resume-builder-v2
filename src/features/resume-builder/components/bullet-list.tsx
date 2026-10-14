@@ -4,6 +4,7 @@ import { Plus, Trash2 } from "lucide-react";
 
 type BulletListProps = {
   bullets: string[];
+  errors?: string[];
   onAdd: () => void;
   onChange: (index: number, value: string) => void;
   onRemove: (index: number) => void;
@@ -11,6 +12,7 @@ type BulletListProps = {
 
 export default function BulletList({
   bullets,
+  errors,
   onAdd,
   onChange,
   onRemove
@@ -24,10 +26,12 @@ export default function BulletList({
             name={`bullet-${index}`}
             label={`Bullet ${index + 1}`}
             value={bullet}
+            error={errors?.[index] ?? ""}
             onChange={(event) => onChange(index, event.target.value)}
           />
 
           <button
+            type="button"
             disabled={bullets.length === 1}
             className="border-2 border-default rounded-xs text-default hover:bg-strong hover:text-background hover:border-strong active:bg-muted active:text-background active:border-muted hover:cursor-pointer py-2.5 px-2.5"
             aria-label={`Remove bullet ${index + 1}`}

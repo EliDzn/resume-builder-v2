@@ -3,6 +3,7 @@ import PreviewToolbar from "./preview-toolbar";
 import ResumePreview from "./resume-preview/resume-preview";
 import { useResumeStore } from "../state/resume-store";
 import type { ResumeData } from "../model/resume-type";
+import ImportFileButton from "./import-file-button";
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2;
@@ -55,6 +56,27 @@ export default function PreviewPanel() {
     fontFamily
   };
 
+  const hasResumeContent =
+    Object.values(personal).some((value) => value.trim()) ||
+    summary.trim().length > 0 ||
+    experiences.some((item) =>
+      [
+        item.role,
+        item.company,
+        item.startDate,
+        item.endDate,
+        ...item.bullets
+      ].some((value) => value.trim())
+    ) ||
+    projects.some((item) =>
+      [item.name, item.techStack, ...item.bullets].some((value) => value.trim())
+    ) ||
+    certifications.some((item) =>
+      [item.provider, item.title, item.completedDate].some((value) =>
+        value.trim()
+      )
+    );
+
   if (!hasHydrated) {
     return (
       <section className="flex h-full min-h-0 w-full items-center justify-center bg-subtle">
@@ -71,7 +93,18 @@ export default function PreviewPanel() {
         ref={scrollerRef}
         className="min-h-0 flex-1 overflow-auto bg-subtle p-8"
       >
-        <ResumePreview resume={resume} zoom={zoom} />
+        {hasResumeContent ? (
+          <ResumePreview resume={resume} zoom={zoom} />
+        ) : (
+          <div className="mx-auto flex min-h-full flex-col items-center justify-center gtext-center">
+            <h2 className="font-semibold">Already have a resume?</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Import an existing DOCX or PDF, or start adding resume details in
+              the editor.
+            </p>
+            <ImportFileButton className="w-full max-w-xs" />
+          </div>
+        )}
       </div>
     </section>
   );

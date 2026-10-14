@@ -62,6 +62,8 @@ type ResumeStore = ResumeData & {
     changes: Partial<Omit<Certification, "id">>
   ) => void;
   removeCertification: (id: string) => void;
+
+  replaceResume: (resume: ResumeData) => void;
 };
 
 function openDatabase(): Promise<IDBDatabase> {
@@ -157,6 +159,7 @@ const createEmptyProject = (): Project => ({
   id: createId(),
   name: "",
   techStack: "",
+  endDate: "",
   bullets: [""]
 });
 
@@ -299,6 +302,7 @@ export const useResumeStore = create<ResumeStore>()(
 
         updateSummary: (summary) =>
           updateResume((resume) => ({ ...resume, summary }), "typing"),
+        replaceResume: (resume) => updateResume(() => resume),
 
         clearResume: () => updateResume(() => createInitialResumeData()),
 
