@@ -1,10 +1,10 @@
 import type { Content, TDocumentDefinitions } from "pdfmake/interfaces";
 import type { ResumeData } from "../model/resume-type";
 
-const PAGE_WIDTH_PT = 595.28;
+const PAGE_WIDTH_PT = 612;
 const PAGE_MARGIN_PT = 18;
 const CONTENT_WIDTH_PT = PAGE_WIDTH_PT - PAGE_MARGIN_PT * 2;
-const PREVIEW_BODY_SIZE_PT = 8.25;
+const PREVIEW_BODY_SIZE_PT = 11;
 
 function formatMonthYear(value: string): string {
   if (!value) return "";
@@ -29,7 +29,7 @@ function sectionHeading(title: string, topMargin: number): Content[] {
     {
       text: title.toUpperCase(),
       style: "sectionTitle",
-      margin: [0, topMargin, 0, 3]
+      margin: [0, topMargin, 0, 2]
     },
     {
       canvas: [
@@ -43,7 +43,7 @@ function sectionHeading(title: string, topMargin: number): Content[] {
           lineColor: "#202124"
         }
       ],
-      margin: [0, 0, 0, 3]
+      margin: [0, 0, 0, 2]
     }
   ];
 }
@@ -54,7 +54,7 @@ export function buildResumeDocument(resume: ResumeData): TDocumentDefinitions {
   let hasSection = false;
 
   const addSectionHeading = (title: string) => {
-    content.push(...sectionHeading(title, hasSection ? 13.5 : 0));
+    content.push(...sectionHeading(title, hasSection ? 2 : 0));
     hasSection = true;
   };
 
@@ -92,7 +92,7 @@ export function buildResumeDocument(resume: ResumeData): TDocumentDefinitions {
     content.push({
       text: resume.summary,
       style: "body",
-      margin: [0, 8.25, 0, 8.25]
+      margin: [0, 0, 0, 0]
     });
   }
 
@@ -131,7 +131,7 @@ export function buildResumeDocument(resume: ResumeData): TDocumentDefinitions {
         content.push({
           ul: bullets,
           style: "body",
-          margin: [0, 8.25, 0, 9],
+          margin: [0, 2, 0, 10],
           markerColor: "#202124"
         });
       }
@@ -173,7 +173,7 @@ export function buildResumeDocument(resume: ResumeData): TDocumentDefinitions {
         content.push({
           ul: bullets,
           style: "body",
-          margin: [0, 8.25, 0, 9],
+          margin: [0, 2, 0, 10],
           markerColor: "#202124"
         });
       }
@@ -185,24 +185,20 @@ export function buildResumeDocument(resume: ResumeData): TDocumentDefinitions {
 
     for (const certification of resume.certifications) {
       content.push({
-        columns: [
+        stack: [
           {
             text:
               [certification.provider, certification.title]
                 .filter(Boolean)
                 .join(" ") || "Certification",
-            style: "entryTitle",
-            width: "*"
+            style: "body"
           },
           {
             text: formatMonthYear(certification.completedDate),
-            style: "date",
-            alignment: "right",
-            width: "auto"
+            style: "date"
           }
         ],
-        columnGap: 6,
-        margin: [0, 0, 0, 9]
+        margin: [0, 0, 0, 10]
       });
     }
   }
@@ -211,7 +207,7 @@ export function buildResumeDocument(resume: ResumeData): TDocumentDefinitions {
     info: {
       title: personal.fullName ? `${personal.fullName}_Resume` : "Resume"
     },
-    pageSize: "A4",
+    pageSize: "LETTER",
     pageMargins: [
       PAGE_MARGIN_PT,
       PAGE_MARGIN_PT,
@@ -220,44 +216,43 @@ export function buildResumeDocument(resume: ResumeData): TDocumentDefinitions {
     ],
     content,
     defaultStyle: {
-      font: "Roboto",
+      font: "Times",
       fontSize: PREVIEW_BODY_SIZE_PT,
       lineHeight: 1.2,
       color: "#202124"
     },
     styles: {
       name: {
-        fontSize: 15,
+        fontSize: 20,
         bold: true,
         alignment: "center",
-        margin: [0, 0, 0, 10.5]
+        margin: [0, 8, 0, 8]
       },
       role: {
-        fontSize: 10.5,
+        fontSize: 14,
         alignment: "center",
         margin: [0, 0, 0, 10.5]
       },
       contact: {
-        fontSize: 8.25,
+        fontSize: 10.5,
         alignment: "center"
       },
       sectionTitle: {
-        fontSize: 9.75,
+        fontSize: 11,
         bold: true,
         characterSpacing: 0,
-        margin: [0, 0, 0, 3]
+        margin: [0, 0, 0, 2]
       },
       entryTitle: {
-        fontSize: 9.65,
+        fontSize: 11,
         bold: true
       },
       date: {
-        fontSize: 8.25
+        fontSize: 11
       },
       subEntry: {
-        fontSize: 8.25,
-        italics: true,
-        margin: [0, 0, 0, 2]
+        fontSize: 11,
+        italics: true
       },
       body: {
         fontSize: PREVIEW_BODY_SIZE_PT

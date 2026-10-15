@@ -101,7 +101,6 @@ export default function PreviewToolbar() {
 
       <PreviewToolbarButtonGroup className="border-l">
         <PreviewToolbarSelect />
-
         <PreviewToolbarButton disabled>zoom out</PreviewToolbarButton>
         <PreviewToolbarButton disabled>zoom in</PreviewToolbarButton>
       </PreviewToolbarButtonGroup>

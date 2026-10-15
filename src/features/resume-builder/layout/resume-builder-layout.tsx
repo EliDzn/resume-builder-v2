@@ -7,8 +7,8 @@ import {
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import EditorPanel from "../components/editor-panel";
-import PreviewPanel from "../components/preview-panel";
 import InsightPanel from "../components/insight-panel";
+import PreviewPanelReactPdf from "../components/preview-panel-react-pdf";
 
 export default function ResumeBuilderLayout() {
   return (
@@ -30,7 +30,7 @@ export default function ResumeBuilderLayout() {
         <ResizableHandle withHandle />
 
         <ResizablePanel defaultSize="50%" minSize="30%" className="min-w-0">
-          <PreviewPanel />
+          <PreviewPanelReactPdf />
         </ResizablePanel>
 
         <ResizableHandle withHandle />

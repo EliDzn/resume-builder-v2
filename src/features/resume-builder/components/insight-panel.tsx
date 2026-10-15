@@ -73,6 +73,7 @@ export default function InsightPanel() {
           <TextareaField
             label="Job Description"
             placeholder="Copy and paste the job description here to tailor your resume to the job requirements"
+            error=""
           />
           <Button variant="Primary" className="flex-1">
             Generate Insights
