@@ -17,8 +17,7 @@ const styles = StyleSheet.create({
     lineHeight: 1.2
   },
   header: {
-    alignItems: "center",
-    marginBottom: 0
+    alignItems: "center"
   },
   name: {
     fontSize: 20,
@@ -30,7 +29,8 @@ const styles = StyleSheet.create({
   role: {
     fontSize: 14,
     textAlign: "center",
-    marginBottom: 10.5
+    marginTop: 2,
+    marginBottom: 4
   },
   contact: {
     fontSize: 10.5,
@@ -205,7 +205,7 @@ export default function ResumeDocument({ resume }: ResumeDocumentProps) {
 
           {resume.certifications.map((certification) => (
             <View key={certification.id} style={styles.entry}>
-              <View>
+              <View style={styles.entryHeader}>
                 <Text>
                   {[certification.provider, certification.title]
                     .filter(Boolean)
@@ -217,6 +217,23 @@ export default function ResumeDocument({ resume }: ResumeDocumentProps) {
               </View>
             </View>
           ))}
+        </View>
+      )}
+
+      {Object.values(resume.skills).some((values) => values.length > 0) && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Skills</Text>
+          {(
+            [
+              ["Frontend", resume.skills.frontend.join(", ")],
+              ["Backend", resume.skills.backend.join(", ")],
+              ["Tools", resume.skills.tools.join(", ")]
+            ] as const
+          )
+            .filter(([, value]) => value.trim())
+            .map(([label, value]) => (
+              <Text key={label}>{`${label}: ${value}`}</Text>
+            ))}
         </View>
       )}
     </Page>

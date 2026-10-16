@@ -1,4 +1,4 @@
-import type { ResumeData } from "../model/resume-type";
+import type { ResumeData, ResumeSkills } from "../model/resume-type";
 
 type Section =
   | "contact"
@@ -6,6 +6,7 @@ type Section =
   | "experience"
   | "projects"
   | "certifications"
+  | "skills"
   | "ignored";
 
 const headings: Record<string, Section> = {
@@ -22,9 +23,9 @@ const headings: Record<string, Section> = {
   "personal projects": "projects",
   certifications: "certifications",
   certificates: "certifications",
+  skills: "skills",
   organizations: "ignored",
-  education: "ignored",
-  skills: "ignored"
+  education: "ignored"
 };
 
 const MONTH_PATTERN =
@@ -129,6 +130,7 @@ export function parseResumeText(text: string): ResumeData {
     experience: [],
     projects: [],
     certifications: [],
+    skills: [],
     ignored: []
   };
 
@@ -210,6 +212,28 @@ export function parseResumeText(text: string): ResumeData {
       };
     });
 
+  const skills: ResumeSkills = { frontend: [], backend: [], tools: [] };
+
+  for (const line of sections.skills) {
+    const match = cleanBullet(line).match(
+      /^(Frontend|Backend|Tools)\s*:\s*(.*)$/i
+    );
+    const category = match?.[1]?.toLowerCase();
+    const value = match?.[2]?.trim();
+
+    if (
+      value &&
+      (category === "frontend" ||
+        category === "backend" ||
+        category === "tools")
+    ) {
+      skills[category] = value
+        .split(/[,;]/)
+        .map((skill) => skill.trim())
+        .filter(Boolean);
+    }
+  }
+
   return {
     personal: {
       fullName: contactLines[0] ?? "",
@@ -224,6 +248,7 @@ export function parseResumeText(text: string): ResumeData {
     experiences,
     projects,
     certifications,
+    skills,
     fontFamily: "inter"
   };
 }

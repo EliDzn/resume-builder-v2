@@ -13,6 +13,7 @@ export default function InsightPanel() {
   const experiences = useResumeStore((state) => state.experiences);
   const projects = useResumeStore((state) => state.projects);
   const certifications = useResumeStore((state) => state.certifications);
+  const skills = useResumeStore((state) => state.skills);
   const fontFamily = useResumeStore((state) => state.fontFamily);
   const hasHydrated = useResumeStore((state) => state.hasHydrated);
 
@@ -25,6 +26,7 @@ export default function InsightPanel() {
     experiences,
     projects,
     certifications,
+    skills,
     fontFamily
   };
 

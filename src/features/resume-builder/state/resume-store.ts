@@ -6,7 +6,8 @@ import type {
   PersonalInfo,
   Project,
   ResumeData,
-  ResumeFont
+  ResumeFont,
+  ResumeSkills
 } from "../model/resume-type";
 
 const DATABASE_NAME = "resume-builder-db";
@@ -25,6 +26,7 @@ type ResumeStore = ResumeData & {
   updateFontFamily: (fontFamily: ResumeFont) => void;
   updatePersonal: (changes: Partial<PersonalInfo>) => void;
   updateSummary: (summary: string) => void;
+  updateSkills: (changes: Partial<ResumeSkills>) => void;
   clearResume: () => void;
   undo: () => void;
   redo: () => void;
@@ -187,7 +189,8 @@ function createInitialResumeData(): ResumeData {
     summary: "",
     experiences: [createEmptyExperience()],
     projects: [createEmptyProject()],
-    certifications: [createEmptyCertification()]
+    certifications: [createEmptyCertification()],
+    skills: { frontend: [], backend: [], tools: [] }
   };
 }
 
@@ -198,6 +201,7 @@ function getResumeData(state: ResumeStore): ResumeData {
     experiences: state.experiences,
     projects: state.projects,
     certifications: state.certifications,
+    skills: state.skills,
     fontFamily: state.fontFamily
   };
 }
@@ -302,6 +306,14 @@ export const useResumeStore = create<ResumeStore>()(
 
         updateSummary: (summary) =>
           updateResume((resume) => ({ ...resume, summary }), "typing"),
+        updateSkills: (changes) =>
+          updateResume(
+            (resume) => ({
+              ...resume,
+              skills: { ...resume.skills, ...changes }
+            }),
+            "typing"
+          ),
         replaceResume: (resume) => updateResume(() => resume),
 
         clearResume: () => updateResume(() => createInitialResumeData()),
@@ -527,8 +539,36 @@ export const useResumeStore = create<ResumeStore>()(
     {
       name: STORAGE_KEY,
       storage: createJSONStorage(() => indexedDbStorage),
-      version: 1,
+      version: 2,
       partialize: (state) => getResumeData(state),
+      migrate: (persistedState) => {
+        const state = persistedState as Partial<ResumeData> & {
+          skills?: Partial<Record<keyof ResumeSkills, unknown>>;
+        };
+        const toSkillArray = (value: unknown): string[] => {
+          if (Array.isArray(value)) {
+            return value.filter(
+              (item): item is string => typeof item === "string"
+            );
+          }
+
+          return typeof value === "string"
+            ? value
+                .split(",")
+                .map((skill) => skill.trim())
+                .filter(Boolean)
+            : [];
+        };
+
+        return {
+          ...state,
+          skills: {
+            frontend: toSkillArray(state.skills?.frontend),
+            backend: toSkillArray(state.skills?.backend),
+            tools: toSkillArray(state.skills?.tools)
+          }
+        };
+      },
       onRehydrateStorage: () => () => {
         useResumeStore.setState({ hasHydrated: true });
       }

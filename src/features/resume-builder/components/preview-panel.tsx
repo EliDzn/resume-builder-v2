@@ -24,6 +24,7 @@ export default function PreviewPanel() {
   const experiences = useResumeStore((state) => state.experiences);
   const projects = useResumeStore((state) => state.projects);
   const certifications = useResumeStore((state) => state.certifications);
+  const skills = useResumeStore((state) => state.skills);
   const fontFamily = useResumeStore((state) => state.fontFamily);
   const hasHydrated = useResumeStore((state) => state.hasHydrated);
 
@@ -33,6 +34,7 @@ export default function PreviewPanel() {
     experiences,
     projects,
     certifications,
+    skills,
     fontFamily
   };
 
@@ -57,7 +59,8 @@ export default function PreviewPanel() {
       [item.provider, item.title, item.completedDate].some((value) =>
         value.trim()
       )
-    );
+    ) ||
+    Object.values(skills).some((values) => values.length > 0);
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -175,6 +178,7 @@ export default function PreviewPanel() {
     experiences,
     projects,
     certifications,
+    skills,
     fontFamily
   ]);
 

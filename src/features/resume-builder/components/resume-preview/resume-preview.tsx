@@ -134,6 +134,23 @@ export default function ResumePreview({ resume }: ResumePreviewProps) {
           ))}
         </section>
       )}
+
+      {Object.values(resume.skills).some((values) => values.length > 0) && (
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Skills</h2>
+          {(
+            [
+              ["Frontend", resume.skills.frontend.join(", ")],
+              ["Backend", resume.skills.backend.join(", ")],
+              ["Tools", resume.skills.tools.join(", ")]
+            ] as const
+          )
+            .filter(([, value]) => value.trim())
+            .map(([label, value]) => (
+              <p key={label}>{`${label}: ${value}`}</p>
+            ))}
+        </section>
+      )}
     </div>
   );
 }

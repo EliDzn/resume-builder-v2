@@ -1,3 +1,4 @@
+import { useState } from "react";
 import SidePanel from "./side-panel";
 import InputField from "@/components/ui/input-field";
 import TextareaField from "@/components/ui/textarea-field";
@@ -10,9 +11,65 @@ import CertificationEntry from "./certification-entry";
 import { useOverflowDetect } from "../hooks/use-overflow";
 import { useResumeStore } from "../state/resume-store";
 import { resumeSchema } from "../model/resume-schema";
-import type { ResumeData } from "../model/resume-type";
+import type { ResumeData, ResumeSkills } from "../model/resume-type";
+import Checkbox from "@/components/ui/checkbox";
+
+const skillGroups: {
+  key: keyof ResumeSkills;
+  label: string;
+  options: string[];
+}[] = [
+  {
+    key: "frontend",
+    label: "Frontend",
+    options: [
+      "HTML",
+      "CSS",
+      "JavaScript",
+      "TypeScript",
+      "React",
+      "Vue",
+      "Angular"
+    ]
+  },
+  {
+    key: "backend",
+    label: "Backend",
+    options: [
+      "Node.js",
+      "Express",
+      "Python",
+      "Django",
+      "Java",
+      "Spring Boot",
+      "C#",
+      ".NET",
+      "Go",
+      "PHP"
+    ]
+  },
+  {
+    key: "tools",
+    label: "Tools",
+    options: [
+      "Git",
+      "GitHub",
+      "Docker",
+      "PostgreSQL",
+      "MongoDB",
+      "AWS",
+      "Azure",
+      "Figma",
+      "Jest",
+      "Vite"
+    ]
+  }
+];
 
 export default function EditorPanel() {
+  const [customSkills, setCustomSkills] = useState<
+    Record<keyof ResumeSkills, string>
+  >({ frontend: "", backend: "", tools: "" });
   const { ref: scrollRef, isOverflowing } = useOverflowDetect<HTMLDivElement>();
 
   const personal = useResumeStore((state) => state.personal);
@@ -20,13 +77,45 @@ export default function EditorPanel() {
   const experiences = useResumeStore((state) => state.experiences);
   const projects = useResumeStore((state) => state.projects);
   const certifications = useResumeStore((state) => state.certifications);
+  const skills = useResumeStore((state) => state.skills);
   const fontFamily = useResumeStore((state) => state.fontFamily);
 
   const updatePersonal = useResumeStore((state) => state.updatePersonal);
   const updateSummary = useResumeStore((state) => state.updateSummary);
+  const updateSkills = useResumeStore((state) => state.updateSkills);
   const addExperience = useResumeStore((state) => state.addExperience);
   const addProject = useResumeStore((state) => state.addProject);
   const addCertification = useResumeStore((state) => state.addCertification);
+
+  const updateSkillSelection = (
+    category: keyof ResumeSkills,
+    skill: string,
+    checked: boolean
+  ) => {
+    const selected = skills[category];
+    const nextSkills: Partial<ResumeSkills> = {
+      [category]: checked
+        ? [...selected, skill]
+        : selected.filter((item) => item !== skill)
+    };
+
+    updateSkills(nextSkills);
+  };
+
+  const addCustomSkill = (category: keyof ResumeSkills) => {
+    const skill = customSkills[category].trim();
+    if (!skill) return;
+
+    if (
+      !skills[category].some(
+        (item) => item.toLowerCase() === skill.toLowerCase()
+      )
+    ) {
+      updateSkillSelection(category, skill, true);
+    }
+
+    setCustomSkills((current) => ({ ...current, [category]: "" }));
+  };
 
   const resume: ResumeData = {
     personal,
@@ -34,6 +123,7 @@ export default function EditorPanel() {
     experiences,
     projects,
     certifications,
+    skills,
     fontFamily
   };
 
@@ -233,6 +323,59 @@ export default function EditorPanel() {
           >
             Add Certification
           </Button>
+        </EditorPanelSection>
+        <EditorPanelSection title="Skills">
+          <EditorPanelFieldset>
+            {skillGroups.map(({ key, label, options }) => (
+              <fieldset key={key} className="flex min-w-0 flex-col gap-3">
+                <legend className="font-semibold">{label}</legend>
+                <div className="flex flex-wrap gap-2">
+                  {options.map((skill) => (
+                    <Checkbox
+                      key={skill}
+                      checked={skills[key].includes(skill)}
+                      aria-label={`${label}: ${skill}`}
+                      onCheckedChange={(checked) =>
+                        updateSkillSelection(key, skill, checked)
+                      }
+                    >
+                      {skill}
+                    </Checkbox>
+                  ))}
+                </div>
+                <div className="flex items-end gap-2">
+                  <InputField
+                    id={`skills-${key}-custom`}
+                    name={`skills.${key}.custom`}
+                    label={`Custom ${label} skill`}
+                    placeholder="Add another skill"
+                    value={customSkills[key]}
+                    error=""
+                    onChange={(event) =>
+                      setCustomSkills((current) => ({
+                        ...current,
+                        [key]: event.target.value
+                      }))
+                    }
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        addCustomSkill(key);
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="Ghost"
+                    disabled={!customSkills[key].trim()}
+                    onClick={() => addCustomSkill(key)}
+                  >
+                    Add
+                  </Button>
+                </div>
+              </fieldset>
+            ))}
+          </EditorPanelFieldset>
         </EditorPanelSection>
       </div>
     </SidePanel>

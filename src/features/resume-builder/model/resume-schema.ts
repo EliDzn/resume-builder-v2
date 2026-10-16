@@ -190,6 +190,11 @@ export const resumeSchema = z
     experiences: z.array(experienceSchema),
     projects: z.array(projectSchema),
     certifications: z.array(certificationSchema),
+    skills: z.object({
+      frontend: z.array(z.string()),
+      backend: z.array(z.string()),
+      tools: z.array(z.string())
+    }),
     fontFamily: z.enum(["inter", "times"])
   })
   .superRefine((resume, context) => {
@@ -200,11 +205,19 @@ export const resumeSchema = z
     const hasNamedCertification = resume.certifications.some((item) =>
       item.title.trim()
     );
+    const hasSkills = Object.values(resume.skills).some(
+      (values) => values.length
+    );
 
-    if (!hasNamedExperience && !hasNamedProject && !hasNamedCertification) {
+    if (
+      !hasNamedExperience &&
+      !hasNamedProject &&
+      !hasNamedCertification &&
+      !hasSkills
+    ) {
       context.addIssue({
         code: "custom",
-        message: "Add an experience, project, or certification."
+        message: "Add an experience, project, certification, or skill."
       });
     }
   });

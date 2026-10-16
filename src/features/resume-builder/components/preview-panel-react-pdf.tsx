@@ -23,6 +23,7 @@ export default function PreviewPanelReactPdf() {
     experiences,
     projects,
     certifications,
+    skills,
     fontFamily,
     hasHydrated,
     hasResumeContent
@@ -35,12 +36,14 @@ export default function PreviewPanelReactPdf() {
     key: string;
     error?: string;
   } | null>(null);
+
   const previewKey = JSON.stringify([
     personal,
     summary,
     experiences,
     projects,
     certifications,
+    skills,
     fontFamily,
     zoom
   ]);
@@ -94,6 +97,7 @@ export default function PreviewPanelReactPdf() {
           experiences,
           projects,
           certifications,
+          skills,
           fontFamily
         };
         const blob = await pdf(
@@ -218,6 +222,7 @@ export default function PreviewPanelReactPdf() {
     experiences,
     projects,
     certifications,
+    skills,
     fontFamily,
     zoom,
     previewKey
@@ -244,32 +249,25 @@ export default function PreviewPanelReactPdf() {
             className="flex min-h-full flex-col items-center gap-6"
           />
 
-          {!hasRendered && isGenerating && (
-            <p
-              role="status"
-              className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground"
-            >
-              Generating preview…
-            </p>
-          )}
+          <div className="pointer-events-none absolute right-2 top-2 z-10 flex flex-col items-end gap-2">
+            {isGenerating && (
+              <p
+                role="status"
+                className="w-fit bg-foreground px-2 py-1 text-sm text-background shadow"
+              >
+                {hasRendered ? "Updating preview…" : "Generating preview…"}
+              </p>
+            )}
 
-          {hasRendered && isGenerating && (
-            <p
-              role="status"
-              className="sticky bottom-2 ml-auto w-fit bg-background px-2 py-1 text-xs text-muted-foreground"
-            >
-              Updating preview…
-            </p>
-          )}
-
-          {currentResult?.error && (
-            <p
-              role="alert"
-              className="sticky bottom-2 ml-auto w-fit bg-background px-2 py-1 text-sm text-destructive"
-            >
-              Preview update failed: {currentResult.error}
-            </p>
-          )}
+            {currentResult?.error && (
+              <p
+                role="alert"
+                className="w-fit bg-foreground px-2 py-1 text-sm text-destructive shadow"
+              >
+                Preview update failed: {currentResult.error}
+              </p>
+            )}
+          </div>
         </div>
       ) : (
         <div className="min-h-0 flex-1 overflow-auto bg-subtle p-4">

@@ -6,6 +6,7 @@ export function usePreviewData() {
   const experiences = useResumeStore((state) => state.experiences);
   const projects = useResumeStore((state) => state.projects);
   const certifications = useResumeStore((state) => state.certifications);
+  const skills = useResumeStore((state) => state.skills);
   const fontFamily = useResumeStore((state) => state.fontFamily);
   const hasHydrated = useResumeStore((state) => state.hasHydrated);
 
@@ -30,7 +31,8 @@ export function usePreviewData() {
       [item.provider, item.title, item.completedDate].some((value) =>
         value.trim()
       )
-    );
+    ) ||
+    Object.values(skills).some((values) => values.length > 0);
 
   return {
     personal,
@@ -38,6 +40,7 @@ export function usePreviewData() {
     experiences,
     projects,
     certifications,
+    skills,
     fontFamily,
     hasHydrated,
     hasResumeContent

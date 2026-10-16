@@ -203,6 +203,21 @@ export function buildResumeDocument(resume: ResumeData): TDocumentDefinitions {
     }
   }
 
+  const skills = (
+    [
+      ["Frontend", resume.skills.frontend.join(", ")],
+      ["Backend", resume.skills.backend.join(", ")],
+      ["Tools", resume.skills.tools.join(", ")]
+    ] as const
+  ).filter(([, value]) => value.trim());
+
+  if (skills.length > 0) {
+    addSectionHeading("Skills");
+    for (const [label, value] of skills) {
+      content.push({ text: `${label}: ${value}`, style: "body" });
+    }
+  }
+
   return {
     info: {
       title: personal.fullName ? `${personal.fullName}_Resume` : "Resume"

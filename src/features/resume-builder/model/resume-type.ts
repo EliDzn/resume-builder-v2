@@ -34,11 +34,18 @@ export type Certification = {
   completedDate: string;
 };
 
+export type ResumeSkills = {
+  frontend: string[];
+  backend: string[];
+  tools: string[];
+};
+
 export type ResumeData = {
   personal: PersonalInfo;
   summary: string;
   experiences: Experience[];
   projects: Project[];
   certifications: Certification[];
+  skills: ResumeSkills;
   fontFamily: ResumeFont;
 };
