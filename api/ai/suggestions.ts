@@ -2,8 +2,10 @@
 
 import {
   ResumeSuggestionsRequestSchema,
-  ResumeSuggestionsSchema
+  ResumeSuggestionsSchema,
+  type ResumeSuggestions
 } from "../../src/features/resume-builder/model/gemini-suggestions.js";
+import { GuardRejectedError, runAIGuard } from "./ai-guard.js";
 import { env } from "node:process";
 
 const MAX_REQUEST_BYTES = 256 * 1024;
@@ -11,7 +13,7 @@ const REQUEST_TIMEOUT_MS = 25_000;
 const DEFAULT_MODEL = "gemini-3.5-flash-lite";
 
 const SYSTEM_INSTRUCTION = `
-You are a careful resume coach. Analyze the supplied resume data against
+You are an expert tech resume coach. Analyze the supplied resume data against
 the job description and return only JSON matching the requested response
 schema.
 
@@ -21,7 +23,7 @@ contain exactly three fields: "severity", "title", and "detail".
 Classify insights using these severity rules:
 - Error: A factual issue supported by the supplied resume data, such as
   inconsistent dates, contradictory information, or a verifiable omission
-  required by the resume's stated facts. Do not label a missing achievement
+  required by the resume's stated facts. Do not label a missing achievement, but most importantly something missing form key techstack/responsibility
   or metric as an error merely because it is absent.
 - Warning: An improvement opportunity, such as unclear wording, weak action
   verbs, insufficient context, or a relevant job-description requirement
@@ -50,6 +52,15 @@ type GeminiResponse = {
     };
   }>;
 };
+
+class SuggestionsError extends Error {
+  constructor(
+    readonly status: number,
+    message: string
+  ) {
+    super(message);
+  }
+}
 
 const SUGGESTIONS_OUTPUT_SCHEMA = {
   type: "OBJECT",
@@ -125,86 +136,123 @@ export default {
     }
 
     const model = env.GEMINI_MODEL || DEFAULT_MODEL;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
     try {
-      const upstream = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-        {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "x-goog-api-key": apiKey
-          },
-          signal: controller.signal,
-          body: JSON.stringify({
-            systemInstruction: {
-              parts: [{ text: SYSTEM_INSTRUCTION }]
-            },
-            contents: [
+      const suggestions = await runAIGuard<ResumeSuggestions>({
+        request,
+        payload: parsedRequest.data,
+        execute: async () => {
+          const controller = new AbortController();
+          const timeout = setTimeout(
+            () => controller.abort(),
+            REQUEST_TIMEOUT_MS
+          );
+
+          try {
+            const upstream = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
               {
-                role: "user",
-                parts: [{ text: JSON.stringify(parsedRequest.data) }]
+                method: "POST",
+                headers: {
+                  "content-type": "application/json",
+                  "x-goog-api-key": apiKey
+                },
+                signal: controller.signal,
+                body: JSON.stringify({
+                  systemInstruction: {
+                    parts: [{ text: SYSTEM_INSTRUCTION }]
+                  },
+                  contents: [
+                    {
+                      role: "user",
+                      parts: [{ text: JSON.stringify(parsedRequest.data) }]
+                    }
+                  ],
+                  generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: SUGGESTIONS_OUTPUT_SCHEMA,
+                    temperature: 0.2,
+                    maxOutputTokens: 1800
+                  }
+                })
               }
-            ],
-            generationConfig: {
-              responseFormat: {
-                text: {
-                  mimeType: "APPLICATION_JSON",
-                  schema: SUGGESTIONS_OUTPUT_SCHEMA
-                }
-              },
-              temperature: 0.2,
-              maxOutputTokens: 1800
+            );
+
+            if (!upstream.ok) {
+              throw new SuggestionsError(
+                upstream.status === 429 ? 503 : 502,
+                upstream.status === 429
+                  ? "The AI service is busy. Please try again shortly."
+                  : "The AI service could not generate suggestions."
+              );
             }
-          })
+
+            const payload = (await upstream.json()) as GeminiResponse;
+
+            const generatedText = payload.candidates?.[0]?.content?.parts
+              ?.map((part) => part.text ?? "")
+              .join("")
+              .trim();
+
+            if (!generatedText) {
+              throw new SuggestionsError(
+                502,
+                "The AI returned an empty response."
+              );
+            }
+
+            let generated: unknown;
+
+            try {
+              generated = JSON.parse(generatedText);
+            } catch {
+              throw new SuggestionsError(
+                502,
+                "The AI returned an invalid response."
+              );
+            }
+
+            const parsedSuggestions =
+              ResumeSuggestionsSchema.safeParse(generated);
+
+            if (!parsedSuggestions.success) {
+              throw new SuggestionsError(
+                502,
+                "The AI returned an invalid response."
+              );
+            }
+
+            return parsedSuggestions.data;
+          } catch (error) {
+            if (error instanceof SuggestionsError) {
+              throw error;
+            }
+
+            if (controller.signal.aborted) {
+              throw new SuggestionsError(
+                504,
+                "The AI request timed out. Please try again."
+              );
+            }
+
+            throw new SuggestionsError(502, "Could not reach the AI service.");
+          } finally {
+            clearTimeout(timeout);
+          }
         }
-      );
+      });
 
-      if (!upstream.ok) {
-        return jsonError(
-          upstream.status === 429
-            ? "The AI service is busy. Please try again shortly."
-            : "The AI service could not generate suggestions.",
-          upstream.status === 429 ? 503 : 502
-        );
+      return Response.json(suggestions);
+    } catch (error) {
+      if (error instanceof GuardRejectedError) {
+        return jsonError(error.message, error.status);
       }
 
-      const payload = (await upstream.json()) as GeminiResponse;
-
-      const generatedText = payload.candidates?.[0]?.content?.parts
-        ?.map((part) => part.text ?? "")
-        .join("")
-        .trim();
-
-      if (!generatedText) {
-        return jsonError("The AI returned an empty response.", 502);
+      if (error instanceof SuggestionsError) {
+        return jsonError(error.message, error.status);
       }
 
-      let generated: unknown;
-
-      try {
-        generated = JSON.parse(generatedText);
-      } catch {
-        return jsonError("The AI returned an invalid response.", 502);
-      }
-
-      const parsedSuggestions = ResumeSuggestionsSchema.safeParse(generated);
-
-      if (!parsedSuggestions.success) {
-        return jsonError("The AI returned an invalid response.", 502);
-      }
-
-      return Response.json(parsedSuggestions.data);
-    } catch {
-      if (controller.signal.aborted) {
-        return jsonError("The AI request timed out. Please try again.", 504);
-      }
-
-      return jsonError("Could not reach the AI service.", 502);
-    } finally {
-      clearTimeout(timeout);
+      return jsonError("Could not generate suggestions.", 502);
     }
   }
 };

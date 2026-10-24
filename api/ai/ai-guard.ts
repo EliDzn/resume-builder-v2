@@ -17,19 +17,32 @@ export class GuardRejectedError extends Error {
   }
 }
 
-export async function runAiGuard<T>(options: {
+export async function runAIGuard<T>(options: {
   request: Request;
   payload: unknown;
   execute: () => Promise<T>;
 }): Promise<T> {
-  const url = env.UPSTASH_REDIS_REST_URL;
-  const token = env.UPSTASH_REDIS_REST_TOKEN;
+  const redisUrl = env.UPSTASH_REDIS_REST_URL;
+  const redisToken = env.UPSTASH_REDIS_REST_TOKEN;
 
-  if (!url || !token) {
+  if (!redisUrl || !redisToken) {
     throw new GuardRejectedError(503, "Rate protection is unavailable.");
   }
 
-  const redis = new Redis({ url, token });
+  const redis = new Redis({
+    url: redisUrl,
+    token: redisToken
+  });
+
+  const redisCall = async <Result>(
+    operation: () => Promise<Result>
+  ): Promise<Result> => {
+    try {
+      return await operation();
+    } catch {
+      throw new GuardRejectedError(503, "Rate protection is unavailable.");
+    }
+  };
 
   const forwardedFor = options.request.headers
     .get("x-vercel-forwarded-for")
@@ -40,30 +53,41 @@ export async function runAiGuard<T>(options: {
     throw new GuardRejectedError(503, "Client identity is unavailable.");
   }
 
+  const environment = env.VERCEL_ENV || "development";
   const ipHash = createHash("sha256").update(forwardedFor).digest("hex");
   const payloadHash = createHash("sha256")
     .update(JSON.stringify(options.payload))
     .digest("hex");
 
-  const cacheKey = `ai:suggestion:${payloadHash}`;
-  const cached = await redis.get<string>(cacheKey);
+  const cacheKey = `ai:${environment}:suggestion:${payloadHash}`;
+  const cached = await redisCall(() => redis.get<string>(cacheKey));
 
   if (cached) {
-    return JSON.parse(cached) as T;
+    try {
+      return JSON.parse(cached) as T;
+    } catch {
+      await redisCall(() => redis.del(cacheKey));
+    }
   }
 
-  const quotaKey = `ai:quota:${ipHash}`;
-  const quotaAccepted = await redis.eval(
-    `local count = tonumber(redis.call("GET", KEYS[1]) or "0")
-     if count >= tonumber(ARGV[1]) then return 0 end
-     count = redis.call("INCR", KEYS[1])
-     if count == 1 then redis.call("EXPIRE", KEYS[1], ARGV[2]) end
-     return 1`,
-    [quotaKey],
-    [DAILY_LIMIT, DAILY_TTL_SECONDS]
+  const quotaKey = `ai:${environment}:quota:${ipHash}`;
+  const quotaAccepted = await redisCall(() =>
+    redis.eval(
+      `local count = tonumber(redis.call("GET", KEYS[1]) or "0")
+       if count >= tonumber(ARGV[1]) then
+         return 0
+       end
+       count = redis.call("INCR", KEYS[1])
+       if count == 1 then
+         redis.call("EXPIRE", KEYS[1], ARGV[2])
+       end
+       return 1`,
+      [quotaKey],
+      [DAILY_LIMIT.toString(), DAILY_TTL_SECONDS.toString()]
+    )
   );
 
-  if (!quotaAccepted) {
+  if (Number(quotaAccepted) !== 1) {
     throw new GuardRejectedError(
       429,
       "Daily AI suggestion limit reached. Try again later."
@@ -71,15 +95,19 @@ export async function runAiGuard<T>(options: {
   }
 
   const lockToken = randomUUID();
-  const ipLockKey = `ai:lock:ip:${ipHash}`;
-  const globalKey = "ai:lock:global";
+  const ipLockKey = `ai:${environment}:lock:ip:${ipHash}`;
+  const globalLockKey = `ai:${environment}:lock:global`;
 
-  let locksAcquired = false;
+  let ipLockAcquired = false;
   let upstreamSucceeded = false;
 
   try {
-    const acquired = await redis.eval(
-      `if redis.call("SET", KEYS[1], ARGV[1], "NX", "PX", ARGV[2]) then
+    const acquired = await redisCall(() =>
+      redis.eval(
+        `if redis.call("GET", KEYS[1]) then
+           return 0
+         end
+         redis.call("SET", KEYS[1], ARGV[1], "PX", ARGV[2])
          local count = tonumber(redis.call("GET", KEYS[2]) or "0")
          if count >= tonumber(ARGV[3]) then
            redis.call("DEL", KEYS[1])
@@ -87,57 +115,78 @@ export async function runAiGuard<T>(options: {
          end
          redis.call("INCR", KEYS[2])
          redis.call("PEXPIRE", KEYS[2], ARGV[4])
-         return 1
-       end
-       return 0`,
-      [ipLockKey, globalKey],
-      [lockToken, IP_LOCK_TTL_MS, GLOBAL_CONCURRENCY_LIMIT, IP_LOCK_TTL_MS]
+         return 1`,
+        [ipLockKey, globalLockKey],
+        [
+          lockToken,
+          IP_LOCK_TTL_MS.toString(),
+          GLOBAL_CONCURRENCY_LIMIT.toString(),
+          IP_LOCK_TTL_MS.toString()
+        ]
+      )
     );
 
-    if (!acquired) {
+    if (Number(acquired) !== 1) {
       throw new GuardRejectedError(
         429,
         "An AI request is already running. Please wait briefly."
       );
     }
 
-    locksAcquired = true;
+    ipLockAcquired = true;
+
     const result = await options.execute();
     upstreamSucceeded = true;
 
-    await redis.set(cacheKey, JSON.stringify(result), {
-      ex: CACHE_TTL_SECONDS
-    });
+    await redisCall(() =>
+      redis.set(cacheKey, JSON.stringify(result), {
+        ex: CACHE_TTL_SECONDS
+      })
+    );
 
     return result;
   } finally {
-    if (locksAcquired) {
-      await redis.eval(
-        `if redis.call("GET", KEYS[1]) == ARGV[1] then
-           redis.call("DEL", KEYS[1])
-         end
-         local count = tonumber(redis.call("GET", KEYS[2]) or "0")
-         if count > 1 then
-           redis.call("DECR", KEYS[2])
-         elseif count == 1 then
-           redis.call("DEL", KEYS[2])
-         end`,
-        [ipLockKey, globalKey],
-        [lockToken]
-      );
+    if (ipLockAcquired) {
+      try {
+        await redisCall(() =>
+          redis.eval(
+            `if redis.call("GET", KEYS[1]) == ARGV[1] then
+               redis.call("DEL", KEYS[1])
+             end
+             local count =
+               tonumber(redis.call("GET", KEYS[2]) or "0")
+             if count > 1 then
+               redis.call("DECR", KEYS[2])
+             elseif count == 1 then
+               redis.call("DEL", KEYS[2])
+             end`,
+            [ipLockKey, globalLockKey],
+            [lockToken]
+          )
+        );
+      } catch {
+        // The short lock TTL releases stale locks automatically.
+      }
     }
 
     if (!upstreamSucceeded) {
-      await redis.eval(
-        `local count = tonumber(redis.call("GET", KEYS[1]) or "0")
-         if count > 1 then
-           redis.call("DECR", KEYS[1])
-         elseif count == 1 then
-           redis.call("DEL", KEYS[1])
-         end`,
-        [quotaKey],
-        []
-      );
+      try {
+        await redisCall(() =>
+          redis.eval(
+            `local count =
+               tonumber(redis.call("GET", KEYS[1]) or "0")
+             if count > 1 then
+               redis.call("DECR", KEYS[1])
+             elseif count == 1 then
+               redis.call("DEL", KEYS[1])
+             end`,
+            [quotaKey],
+            []
+          )
+        );
+      } catch {
+        // The quota key's TTL will prevent stale quota entries.
+      }
     }
   }
 }
