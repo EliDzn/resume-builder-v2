@@ -45,7 +45,7 @@ export interface Project {
   name: string;
   techStack: string;
   endDate?: string;
-  bullets: string[];
+  bullets: Bullet[];
 }
 
 export interface Education {
