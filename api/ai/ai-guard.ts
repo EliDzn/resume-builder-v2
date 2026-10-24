@@ -9,11 +9,12 @@ const IP_LOCK_TTL_MS = 60 * 1000;
 const GLOBAL_CONCURRENCY_LIMIT = 10;
 
 export class GuardRejectedError extends Error {
-  constructor(
-    readonly status: number,
-    message: string
-  ) {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
     super(message);
+    this.status = status;
+    this.name = "GuardRejectedError";
   }
 }
 
