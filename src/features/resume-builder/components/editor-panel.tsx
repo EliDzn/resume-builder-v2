@@ -143,8 +143,8 @@ export default function EditorPanel() {
         <h1 className="text-h1 font-bold">Optimized Resume Builder (v2)</h1>
 
         <p className="mt-1 text-sm text-muted-foreground">
-          A local-first, resume builder based of the Harvard template resume
-          with built-in Gemini AI integration.
+          An AI-powered, local-first resume builder for developers. Generate a
+          polished, Harvard-format tech resume with built-in Gemini AI!
         </p>
       </header>
 
