@@ -3,7 +3,7 @@
 import {
   ResumeSuggestionsRequestSchema,
   ResumeSuggestionsSchema
-} from "../../src/features/resume-builder/model/gemini-suggestions";
+} from "../../src/features/resume-builder/model/gemini-suggestions.ts";
 import { env } from "node:process";
 
 const MAX_REQUEST_BYTES = 256 * 1024;
@@ -173,9 +173,8 @@ export default {
 
       const payload = (await upstream.json()) as GeminiResponse;
 
-      const generatedText = payload.candidates
-        ?.at(0)
-        ?.content?.parts?.map((part) => part.text ?? "")
+      const generatedText = payload.candidates?.[0]?.content?.parts
+        ?.map((part) => part.text ?? "")
         .join("")
         .trim();
 
