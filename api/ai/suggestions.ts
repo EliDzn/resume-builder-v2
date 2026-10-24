@@ -179,10 +179,22 @@ export default {
               }
             );
 
-            console.error("Gemini upstream error", {
-              status: upstream.status,
-              statusText: upstream.statusText
-            });
+            if (!upstream.ok) {
+              const upstreamError = await upstream.text();
+
+              console.error("Gemini upstream error", {
+                status: upstream.status,
+                statusText: upstream.statusText,
+                details: upstreamError
+              });
+
+              throw new SuggestionsError(
+                upstream.status === 429 ? 503 : 502,
+                upstream.status === 429
+                  ? "The AI service is busy. Please try again shortly."
+                  : "The AI service could not generate suggestions."
+              );
+            }
 
             if (!upstream.ok) {
               throw new SuggestionsError(
