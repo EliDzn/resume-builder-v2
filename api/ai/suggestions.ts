@@ -178,6 +178,11 @@ export default {
               }
             );
 
+            console.error("Gemini upstream error", {
+              status: upstream.status,
+              statusText: upstream.statusText
+            });
+
             if (!upstream.ok) {
               throw new SuggestionsError(
                 upstream.status === 429 ? 503 : 502,
