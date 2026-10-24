@@ -75,18 +75,18 @@ const SUGGESTIONS_OUTPUT_SCHEMA = {
             type: "STRING",
             enum: ["Error", "Warning", "Success"]
           },
-          title: { type: "STRING" },
-          detail: { type: "STRING" }
+          title: {
+            type: "STRING"
+          },
+          detail: {
+            type: "STRING"
+          }
         },
-        required: ["severity", "title", "detail"],
-        propertyOrdering: ["severity", "title", "detail"],
-        additionalProperties: false
+        required: ["severity", "title", "detail"]
       }
     }
   },
-  required: ["insights"],
-  propertyOrdering: ["insights"],
-  additionalProperties: false
+  required: ["insights"]
 };
 
 function jsonError(message: string, status: number): Response {
@@ -188,15 +188,6 @@ export default {
                 details: upstreamError
               });
 
-              throw new SuggestionsError(
-                upstream.status === 429 ? 503 : 502,
-                upstream.status === 429
-                  ? "The AI service is busy. Please try again shortly."
-                  : "The AI service could not generate suggestions."
-              );
-            }
-
-            if (!upstream.ok) {
               throw new SuggestionsError(
                 upstream.status === 429 ? 503 : 502,
                 upstream.status === 429
