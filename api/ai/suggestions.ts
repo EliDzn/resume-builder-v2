@@ -3,7 +3,7 @@
 import {
   ResumeSuggestionsRequestSchema,
   ResumeSuggestionsSchema
-} from "../../src/features/resume-builder/model/gemini-suggestions.ts";
+} from "../../src/features/resume-builder/model/gemini-suggestions.js";
 import { env } from "node:process";
 
 const MAX_REQUEST_BYTES = 256 * 1024;
