@@ -72,72 +72,89 @@ export async function runAIGuard<T>(options: {
   }
 
   const quotaKey = `ai:${environment}:quota:${ipHash}`;
-  const quotaAccepted = await redisCall(() =>
-    redis.eval(
-      `local count = tonumber(redis.call("GET", KEYS[1]) or "0")
-       if count >= tonumber(ARGV[1]) then
-         return 0
-       end
-       count = redis.call("INCR", KEYS[1])
-       if count == 1 then
-         redis.call("EXPIRE", KEYS[1], ARGV[2])
-       end
-       return 1`,
-      [quotaKey],
-      [DAILY_LIMIT.toString(), DAILY_TTL_SECONDS.toString()]
-    )
-  );
-
-  if (Number(quotaAccepted) !== 1) {
-    throw new GuardRejectedError(
-      429,
-      "Daily AI suggestion limit reached. Try again later."
-    );
-  }
-
   const lockToken = randomUUID();
+  const quotaReservationKey = `ai:${environment}:quota-reservation:${ipHash}:${lockToken}`;
   const ipLockKey = `ai:${environment}:lock:ip:${ipHash}`;
   const globalLockKey = `ai:${environment}:lock:global`;
 
-  let ipLockAcquired = false;
-  let upstreamSucceeded = false;
+  let quotaReserved = false;
+  let lockMayBeHeld = false;
+  let generationSucceeded = false;
 
   try {
-    const acquired = await redisCall(() =>
+    quotaReserved = true;
+
+    const quotaAccepted = await redisCall(() =>
       redis.eval(
-        `if redis.call("GET", KEYS[1]) then
+        `local count = tonumber(redis.call("GET", KEYS[1]) or "0")
+         if count >= tonumber(ARGV[1]) then
            return 0
          end
+         count = redis.call("INCR", KEYS[1])
+         if count == 1 then
+           redis.call("EXPIRE", KEYS[1], ARGV[2])
+         end
+         redis.call("SET", KEYS[2], "1", "EX", ARGV[2])
+         return 1`,
+        [quotaKey, quotaReservationKey],
+        [DAILY_LIMIT.toString(), DAILY_TTL_SECONDS.toString()]
+      )
+    );
+
+    if (Number(quotaAccepted) !== 1) {
+      quotaReserved = false;
+      throw new GuardRejectedError(
+        429,
+        "Daily AI suggestion limit reached. Try again later."
+      );
+    }
+
+    lockMayBeHeld = true;
+
+    const lockAcquired = await redisCall(() =>
+      redis.eval(
+        `local now = redis.call("TIME")
+         local nowMs = tonumber(now[1]) * 1000 + math.floor(tonumber(now[2]) / 1000)
+         redis.call("ZREMRANGEBYSCORE", KEYS[2], "-inf", nowMs)
+
+         if redis.call("GET", KEYS[1]) then
+           return 0
+         end
+
+         if redis.call("ZCARD", KEYS[2]) >= tonumber(ARGV[3]) then
+           return 0
+         end
+
+         local expiresAt = nowMs + tonumber(ARGV[2])
          redis.call("SET", KEYS[1], ARGV[1], "PX", ARGV[2])
-         local count = tonumber(redis.call("GET", KEYS[2]) or "0")
-         if count >= tonumber(ARGV[3]) then
-           redis.call("DEL", KEYS[1])
-           return 0
-         end
-         redis.call("INCR", KEYS[2])
-         redis.call("PEXPIRE", KEYS[2], ARGV[4])
+         redis.call("ZADD", KEYS[2], expiresAt, ARGV[1])
+         redis.call("PEXPIRE", KEYS[2], ARGV[2])
          return 1`,
         [ipLockKey, globalLockKey],
         [
           lockToken,
           IP_LOCK_TTL_MS.toString(),
-          GLOBAL_CONCURRENCY_LIMIT.toString(),
-          IP_LOCK_TTL_MS.toString()
+          GLOBAL_CONCURRENCY_LIMIT.toString()
         ]
       )
     );
 
-    if (Number(acquired) !== 1) {
+    if (Number(lockAcquired) !== 1) {
+      lockMayBeHeld = false;
       throw new GuardRejectedError(
         429,
         "An AI request is already running. Please wait briefly."
       );
     }
 
-    ipLockAcquired = true;
-
     const result = await options.execute();
-    upstreamSucceeded = true;
+    generationSucceeded = true;
+
+    await redisCall(() =>
+      redis.eval(`redis.call("DEL", KEYS[1])`, [quotaReservationKey], [])
+    );
+
+    quotaReserved = false;
 
     await redisCall(() =>
       redis.set(cacheKey, JSON.stringify(result), {
@@ -147,46 +164,46 @@ export async function runAIGuard<T>(options: {
 
     return result;
   } finally {
-    if (ipLockAcquired) {
+    if (lockMayBeHeld) {
       try {
         await redisCall(() =>
           redis.eval(
             `if redis.call("GET", KEYS[1]) == ARGV[1] then
                redis.call("DEL", KEYS[1])
              end
-             local count =
-               tonumber(redis.call("GET", KEYS[2]) or "0")
-             if count > 1 then
-               redis.call("DECR", KEYS[2])
-             elseif count == 1 then
+
+             redis.call("ZREM", KEYS[2], ARGV[1])
+
+             if redis.call("ZCARD", KEYS[2]) == 0 then
                redis.call("DEL", KEYS[2])
              end`,
             [ipLockKey, globalLockKey],
             [lockToken]
           )
         );
-      } catch {
-        // The short lock TTL releases stale locks automatically.
+      } catch (error) {
+        console.error("AI concurrency lock cleanup failed.", error);
       }
     }
 
-    if (!upstreamSucceeded) {
+    if (quotaReserved && !generationSucceeded) {
       try {
         await redisCall(() =>
           redis.eval(
-            `local count =
-               tonumber(redis.call("GET", KEYS[1]) or "0")
-             if count > 1 then
-               redis.call("DECR", KEYS[1])
-             elseif count == 1 then
-               redis.call("DEL", KEYS[1])
+            `if redis.call("DEL", KEYS[2]) == 1 then
+               local count = tonumber(redis.call("GET", KEYS[1]) or "0")
+               if count > 1 then
+                 redis.call("DECR", KEYS[1])
+               elseif count == 1 then
+                 redis.call("DEL", KEYS[1])
+               end
              end`,
-            [quotaKey],
+            [quotaKey, quotaReservationKey],
             []
           )
         );
-      } catch {
-        // The quota key's TTL will prevent stale quota entries.
+      } catch (error) {
+        console.error("AI quota rollback failed.", error);
       }
     }
   }
