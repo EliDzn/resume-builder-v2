@@ -1,10 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import SidePanel from "./side-panel";
 import Button from "@/components/ui/button";
 import TextareaField from "@/components/ui/textarea-field";
 import { useResumeStore } from "../state/resume-store";
 import type { ResumeData } from "../model/resume-type";
-import { generateResumeSuggestions } from "@/lib/api-client";
+import {
+  generateResumeSuggestions,
+  getAIQuotaStatus,
+  type AIQuotaStatus
+} from "@/lib/api-client";
 import type { ResumeSuggestions } from "../model/gemini-suggestions";
 import { downloadResumePdf } from "../pdf/download-resume-pdf";
 import ImportFileButton from "./import-file-button";
@@ -27,7 +31,6 @@ export default function InsightPanel() {
   const fontFamily = useResumeStore((state) => state.fontFamily);
   const hasHydrated = useResumeStore((state) => state.hasHydrated);
 
-  // Use the existing preview hook to determine whether the resume has content.
   const { hasResumeContent } = usePreviewData();
 
   const [isExporting, setIsExporting] = useState(false);
@@ -35,12 +38,15 @@ export default function InsightPanel() {
   const [jobDescription, setJobDescription] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
+  const [quotaStatus, setQuotaStatus] = useState<AIQuotaStatus | null>(null);
+  const [quotaError, setQuotaError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<ResumeSuggestions | null>(
     null
   );
 
   const requestControllerRef = useRef<AbortController | null>(null);
   const requestIdRef = useRef(0);
+  const quotaRequestIdRef = useRef(0);
   const previousHasResumeContentRef = useRef(hasResumeContent);
 
   const resume: ResumeData = {
@@ -53,7 +59,57 @@ export default function InsightPanel() {
     fontFamily
   };
 
-  // Clear AI state only when the resume transitions from populated to empty.
+  const refreshQuotaStatus = useCallback(async () => {
+    const requestId = ++quotaRequestIdRef.current;
+
+    try {
+      const status = await getAIQuotaStatus();
+
+      if (requestId === quotaRequestIdRef.current) {
+        setQuotaStatus(status);
+        setQuotaError(null);
+      }
+    } catch (error) {
+      if (requestId === quotaRequestIdRef.current) {
+        setQuotaError(
+          error instanceof Error
+            ? error.message
+            : "Could not retrieve AI quota status."
+        );
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydrated) {
+      return;
+    }
+
+    let isCurrent = true;
+    const requestId = ++quotaRequestIdRef.current;
+
+    getAIQuotaStatus()
+      .then((status) => {
+        if (isCurrent && requestId === quotaRequestIdRef.current) {
+          setQuotaStatus(status);
+          setQuotaError(null);
+        }
+      })
+      .catch((error: unknown) => {
+        if (isCurrent && requestId === quotaRequestIdRef.current) {
+          setQuotaError(
+            error instanceof Error
+              ? error.message
+              : "Could not retrieve AI quota status."
+          );
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [hasHydrated]);
+
   useEffect(() => {
     const wasPopulated = previousHasResumeContentRef.current;
     previousHasResumeContentRef.current = hasResumeContent;
@@ -75,6 +131,7 @@ export default function InsightPanel() {
   useEffect(() => {
     return () => {
       requestIdRef.current += 1;
+      quotaRequestIdRef.current += 1;
       requestControllerRef.current?.abort();
     };
   }, []);
@@ -142,6 +199,7 @@ export default function InsightPanel() {
       if (requestId === requestIdRef.current) {
         requestControllerRef.current = null;
         setIsGenerating(false);
+        void refreshQuotaStatus();
       }
     }
   };
@@ -188,6 +246,12 @@ export default function InsightPanel() {
             onChange={(event) => setJobDescription(event.target.value)}
           />
 
+          {quotaError && (
+            <p className="text-sm text-error" role="status">
+              {quotaError}
+            </p>
+          )}
+
           <Button
             type="button"
             variant="Primary"
@@ -197,11 +261,16 @@ export default function InsightPanel() {
               !hasHydrated ||
               !hasResumeContent ||
               isGenerating ||
+              quotaStatus?.remaining === 0 ||
               jobDescription.trim().length < 30
             }
             aria-busy={isGenerating}
           >
-            {isGenerating ? "Generating…" : "Generate Insights"}
+            {isGenerating
+              ? "Generating…"
+              : quotaStatus
+                ? `Generate Insights (${quotaStatus.remaining} remaining)`
+                : "Generate Insights"}
           </Button>
         </div>
 

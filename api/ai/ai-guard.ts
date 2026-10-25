@@ -18,11 +18,17 @@ export class GuardRejectedError extends Error {
   }
 }
 
-export async function runAIGuard<T>(options: {
-  request: Request;
-  payload: unknown;
-  execute: () => Promise<T>;
-}): Promise<T> {
+async function redisCall<Result>(
+  operation: () => Promise<Result>
+): Promise<Result> {
+  try {
+    return await operation();
+  } catch {
+    throw new GuardRejectedError(503, "Rate protection is unavailable.");
+  }
+}
+
+function getGuardContext(request: Request) {
   const redisUrl = env.UPSTASH_REDIS_REST_URL;
   const redisToken = env.UPSTASH_REDIS_REST_TOKEN;
 
@@ -30,22 +36,7 @@ export async function runAIGuard<T>(options: {
     throw new GuardRejectedError(503, "Rate protection is unavailable.");
   }
 
-  const redis = new Redis({
-    url: redisUrl,
-    token: redisToken
-  });
-
-  const redisCall = async <Result>(
-    operation: () => Promise<Result>
-  ): Promise<Result> => {
-    try {
-      return await operation();
-    } catch {
-      throw new GuardRejectedError(503, "Rate protection is unavailable.");
-    }
-  };
-
-  const forwardedFor = options.request.headers
+  const forwardedFor = request.headers
     .get("x-vercel-forwarded-for")
     ?.split(",")[0]
     ?.trim();
@@ -56,6 +47,44 @@ export async function runAIGuard<T>(options: {
 
   const environment = env.VERCEL_ENV || "development";
   const ipHash = createHash("sha256").update(forwardedFor).digest("hex");
+
+  return {
+    redis: new Redis({
+      url: redisUrl,
+      token: redisToken
+    }),
+    environment,
+    ipHash
+  };
+}
+
+export async function getAIQuotaStatus(request: Request): Promise<{
+  used: number;
+  limit: number;
+  remaining: number;
+}> {
+  const { redis, environment, ipHash } = getGuardContext(request);
+  const quotaKey = `ai:${environment}:quota:${ipHash}`;
+  const rawCount = await redisCall(() => redis.get<number>(quotaKey));
+  const used = Number(rawCount ?? 0);
+
+  if (!Number.isSafeInteger(used) || used < 0) {
+    throw new GuardRejectedError(503, "Rate protection is unavailable.");
+  }
+
+  return {
+    used,
+    limit: DAILY_LIMIT,
+    remaining: Math.max(0, DAILY_LIMIT - used)
+  };
+}
+
+export async function runAIGuard<T>(options: {
+  request: Request;
+  payload: unknown;
+  execute: () => Promise<T>;
+}): Promise<T> {
+  const { redis, environment, ipHash } = getGuardContext(options.request);
   const payloadHash = createHash("sha256")
     .update(JSON.stringify(options.payload))
     .digest("hex");

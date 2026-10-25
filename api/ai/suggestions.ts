@@ -5,7 +5,11 @@ import {
   ResumeSuggestionsSchema,
   type ResumeSuggestions
 } from "../../src/features/resume-builder/model/gemini-suggestions.js";
-import { GuardRejectedError, runAIGuard } from "./ai-guard.js";
+import {
+  GuardRejectedError,
+  getAIQuotaStatus,
+  runAIGuard
+} from "./ai-guard.js";
 import { env } from "node:process";
 
 const MAX_REQUEST_BYTES = 256 * 1024;
@@ -99,8 +103,27 @@ export const config = {
 
 export default {
   async fetch(request: Request): Promise<Response> {
+    if (request.method === "GET") {
+      try {
+        const quota = await getAIQuotaStatus(request);
+        return Response.json(quota);
+      } catch (error) {
+        if (error instanceof GuardRejectedError) {
+          return jsonError(error.message, error.status);
+        }
+
+        return jsonError("Could not retrieve AI quota status.", 503);
+      }
+    }
+
     if (request.method !== "POST") {
-      return jsonError("Method not allowed.", 405);
+      return new Response(JSON.stringify({ error: "Method not allowed." }), {
+        status: 405,
+        headers: {
+          "content-type": "application/json",
+          allow: "GET, POST"
+        }
+      });
     }
 
     if (!request.headers.get("content-type")?.includes("application/json")) {

@@ -11,7 +11,7 @@ interface ButtonProps
 }
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-xs hover:cursor-pointer transform-color duration-200 ease-out h-10 py-2 px-4",
+  "inline-flex items-center justify-center rounded-xs hover:cursor-pointer disabled:cursor-not-allowed transform-color duration-200 ease-out h-10 py-2 px-4",
   {
     variants: {
       variant: {
