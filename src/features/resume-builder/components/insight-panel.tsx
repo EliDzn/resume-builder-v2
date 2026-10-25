@@ -96,7 +96,9 @@ export default function InsightPanel() {
   };
 
   const handleGenerateSuggestions = async () => {
-    requestControllerRef.current?.abort();
+    if (requestControllerRef.current) {
+      return;
+    }
 
     const controller = new AbortController();
     requestControllerRef.current = controller;

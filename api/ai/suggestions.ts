@@ -180,14 +180,6 @@ export default {
             );
 
             if (!upstream.ok) {
-              const upstreamError = await upstream.text();
-
-              console.error("Gemini upstream error", {
-                status: upstream.status,
-                statusText: upstream.statusText,
-                details: upstreamError
-              });
-
               throw new SuggestionsError(
                 upstream.status === 429 ? 503 : 502,
                 upstream.status === 429
