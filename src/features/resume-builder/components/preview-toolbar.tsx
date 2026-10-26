@@ -69,6 +69,7 @@ function PreviewToolbarSelect() {
 
 export default function PreviewToolbar() {
   const clearResume = useResumeStore((state) => state.clearResume);
+  const hasHydrated = useResumeStore((state) => state.hasHydrated);
   const undo = useResumeStore((state) => state.undo);
   const redo = useResumeStore((state) => state.redo);
   const canUndo = useResumeStore((state) => state.past.length > 0);
@@ -94,7 +95,11 @@ export default function PreviewToolbar() {
         >
           redo
         </PreviewToolbarButton>
-        <PreviewToolbarButton onClick={clearResume} ariaLabel="Clear resume">
+        <PreviewToolbarButton
+          onClick={clearResume}
+          disabled={!hasHydrated}
+          ariaLabel="Clear resume"
+        >
           clear
         </PreviewToolbarButton>
       </PreviewToolbarButtonGroup>
