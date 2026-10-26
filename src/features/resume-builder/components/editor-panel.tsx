@@ -78,11 +78,17 @@ export default function EditorPanel() {
   const projects = useResumeStore((state) => state.projects);
   const certifications = useResumeStore((state) => state.certifications);
   const skills = useResumeStore((state) => state.skills);
+  const customSkillOptions = useResumeStore(
+    (state) => state.customSkillOptions
+  );
   const fontFamily = useResumeStore((state) => state.fontFamily);
 
   const updatePersonal = useResumeStore((state) => state.updatePersonal);
   const updateSummary = useResumeStore((state) => state.updateSummary);
   const updateSkills = useResumeStore((state) => state.updateSkills);
+  const addCustomSkillOption = useResumeStore(
+    (state) => state.addCustomSkillOption
+  );
   const addExperience = useResumeStore((state) => state.addExperience);
   const addProject = useResumeStore((state) => state.addProject);
   const addCertification = useResumeStore((state) => state.addCertification);
@@ -93,27 +99,36 @@ export default function EditorPanel() {
     checked: boolean
   ) => {
     const selected = skills[category];
-    const nextSkills: Partial<ResumeSkills> = {
-      [category]: checked
-        ? [...selected, skill]
-        : selected.filter((item) => item !== skill)
-    };
+    const alreadySelected = selected.some(
+      (item) => item.toLowerCase() === skill.toLowerCase()
+    );
 
-    updateSkills(nextSkills);
+    const nextSelected = checked
+      ? alreadySelected
+        ? selected
+        : [...selected, skill]
+      : selected.filter((item) => item.toLowerCase() !== skill.toLowerCase());
+
+    updateSkills({ [category]: nextSelected });
   };
 
   const addCustomSkill = (category: keyof ResumeSkills) => {
     const skill = customSkills[category].trim();
     if (!skill) return;
 
-    if (
-      !skills[category].some(
-        (item) => item.toLowerCase() === skill.toLowerCase()
-      )
-    ) {
-      updateSkillSelection(category, skill, true);
+    const group = skillGroups.find(({ key }) => key === category);
+    const existingOption = [
+      ...(group?.options ?? []),
+      ...customSkillOptions[category]
+    ].find((option) => option.toLowerCase() === skill.toLowerCase());
+
+    const skillToSelect = existingOption ?? skill;
+
+    if (!existingOption) {
+      addCustomSkillOption(category, skill);
     }
 
+    updateSkillSelection(category, skillToSelect, true);
     setCustomSkills((current) => ({ ...current, [category]: "" }));
   };
 
@@ -324,57 +339,77 @@ export default function EditorPanel() {
             Add Certification
           </Button>
         </EditorPanelSection>
+
         <EditorPanelSection title="Skills">
           <EditorPanelFieldset>
-            {skillGroups.map(({ key, label, options }) => (
-              <fieldset key={key} className="flex min-w-0 flex-col gap-3">
-                <legend className="font-semibold">{label}</legend>
-                <div className="flex flex-wrap gap-2">
-                  {options.map((skill) => (
-                    <Checkbox
-                      key={skill}
-                      checked={skills[key].includes(skill)}
-                      aria-label={`${label}: ${skill}`}
-                      onCheckedChange={(checked) =>
-                        updateSkillSelection(key, skill, checked)
+            {skillGroups.map(({ key, label, options }) => {
+              const availableOptions = [
+                ...options,
+                ...customSkillOptions[key].filter(
+                  (customOption) =>
+                    !options.some(
+                      (option) =>
+                        option.toLowerCase() === customOption.toLowerCase()
+                    )
+                )
+              ];
+
+              return (
+                <fieldset key={key} className="flex min-w-0 flex-col gap-3">
+                  <legend className="font-semibold">{label}</legend>
+
+                  <div className="flex flex-wrap gap-2">
+                    {availableOptions.map((skill) => (
+                      <Checkbox
+                        key={skill}
+                        checked={skills[key].some(
+                          (selected) =>
+                            selected.toLowerCase() === skill.toLowerCase()
+                        )}
+                        aria-label={`${label}: ${skill}`}
+                        onCheckedChange={(checked) =>
+                          updateSkillSelection(key, skill, checked)
+                        }
+                      >
+                        {skill}
+                      </Checkbox>
+                    ))}
+                  </div>
+
+                  <div className="flex items-end gap-2">
+                    <InputField
+                      id={`skills-${key}-custom`}
+                      name={`skills.${key}.custom`}
+                      label={`Custom ${label} skill`}
+                      placeholder="Add another skill"
+                      value={customSkills[key]}
+                      error=""
+                      onChange={(event) =>
+                        setCustomSkills((current) => ({
+                          ...current,
+                          [key]: event.target.value
+                        }))
                       }
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          addCustomSkill(key);
+                        }
+                      }}
+                    />
+
+                    <Button
+                      type="button"
+                      variant="Ghost"
+                      disabled={!customSkills[key].trim()}
+                      onClick={() => addCustomSkill(key)}
                     >
-                      {skill}
-                    </Checkbox>
-                  ))}
-                </div>
-                <div className="flex items-end gap-2">
-                  <InputField
-                    id={`skills-${key}-custom`}
-                    name={`skills.${key}.custom`}
-                    label={`Custom ${label} skill`}
-                    placeholder="Add another skill"
-                    value={customSkills[key]}
-                    error=""
-                    onChange={(event) =>
-                      setCustomSkills((current) => ({
-                        ...current,
-                        [key]: event.target.value
-                      }))
-                    }
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        event.preventDefault();
-                        addCustomSkill(key);
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="Ghost"
-                    disabled={!customSkills[key].trim()}
-                    onClick={() => addCustomSkill(key)}
-                  >
-                    Add
-                  </Button>
-                </div>
-              </fieldset>
-            ))}
+                      Add
+                    </Button>
+                  </div>
+                </fieldset>
+              );
+            })}
           </EditorPanelFieldset>
         </EditorPanelSection>
       </div>

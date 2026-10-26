@@ -40,6 +40,8 @@ export type ResumeSkills = {
   tools: string[];
 };
 
+export type CustomSkillOptions = Record<keyof ResumeSkills, string[]>;
+
 export type ResumeData = {
   personal: PersonalInfo;
   summary: string;
