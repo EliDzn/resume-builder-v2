@@ -4,6 +4,7 @@ import * as pdfjs from "pdfjs-dist";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import "pdfjs-dist/web/pdf_viewer.css";
 import PreviewToolbar from "./preview-toolbar";
+import ImportFileButton from "./import-file-button";
 import ResumeDocument from "../pdf/resume-document";
 import { usePreviewData } from "./use-preview-data";
 import type { ResumeData } from "../model/resume-type";
@@ -271,13 +272,15 @@ export default function PreviewPanelReactPdf() {
       ) : (
         <div
           ref={scrollerRef}
-          className="min-h-0 flex-1 overflow-auto bg-subtle p-4"
+          className="min-h-0 flex-1 overflow-auto bg-subtle p-8"
         >
-          <div className="flex min-h-full min-w-full justify-center">
-            <div
-              aria-label="Blank resume preview"
-              className="aspect-8.5/11 w-full max-w-153 shadow-md bg-background"
-            />
+          <div className="mx-auto flex min-h-full flex-col items-center justify-center text-center">
+            <h2 className="font-semibold">Already have a resume?</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Import an existing DOCX or PDF, or start adding resume details in
+              the editor.
+            </p>
+            <ImportFileButton className="w-full max-w-xs" />
           </div>
         </div>
       )}
