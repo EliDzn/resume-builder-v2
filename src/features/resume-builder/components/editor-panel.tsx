@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Plus } from "lucide-react";
 import SidePanel from "./side-panel";
 import InputField from "@/components/ui/input-field";
 import TextareaField from "@/components/ui/textarea-field";
@@ -398,14 +399,15 @@ export default function EditorPanel() {
                       }}
                     />
 
-                    <Button
+                    <button
                       type="button"
-                      variant="Ghost"
                       disabled={!customSkills[key].trim()}
+                      className="border-2 border-default rounded-xs text-default hover:bg-strong hover:text-background hover:border-strong active:bg-muted active:text-background active:border-muted hover:cursor-pointer py-2.5 px-2.5 disabled:cursor-not-allowed disabled:opacity-50"
+                      aria-label={`Add ${label} skill`}
                       onClick={() => addCustomSkill(key)}
                     >
-                      Add
-                    </Button>
+                      <Plus aria-hidden="true" size={20} />
+                    </button>
                   </div>
                 </fieldset>
               );

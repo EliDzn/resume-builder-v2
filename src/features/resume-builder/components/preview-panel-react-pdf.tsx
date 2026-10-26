@@ -241,6 +241,7 @@ export default function PreviewPanelReactPdf() {
       <PreviewToolbar />
       {hasResumeContent ? (
         <div
+          key="resume-preview"
           ref={scrollerRef}
           className="relative min-h-0 flex-1 overflow-auto bg-subtle p-4"
         >
@@ -271,6 +272,7 @@ export default function PreviewPanelReactPdf() {
         </div>
       ) : (
         <div
+          key="empty-preview"
           ref={scrollerRef}
           className="min-h-0 flex-1 overflow-auto bg-subtle p-8"
         >
