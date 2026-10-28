@@ -170,7 +170,6 @@ const createEmptyProject = (): Project => ({
 
 const createEmptyCertification = (): Certification => ({
   id: createId(),
-  provider: "",
   title: "",
   completedDate: ""
 });

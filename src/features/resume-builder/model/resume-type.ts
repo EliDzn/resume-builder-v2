@@ -29,7 +29,6 @@ export type Project = {
 
 export type Certification = {
   id: string;
-  provider: string;
   title: string;
   completedDate: string;
 };

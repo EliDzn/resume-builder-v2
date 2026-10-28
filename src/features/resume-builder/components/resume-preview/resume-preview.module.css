@@ -95,6 +95,23 @@
   justify-content: space-between;
 }
 
+.certEntry h3 {
+  margin: 0;
+}
+
+.certEntry span {
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.certifications {
+  margin-bottom: 0;
+}
+
+.certifications .certEntry:last-child {
+  margin-bottom: 18px;
+}
+
 @media print {
   html,
   body {

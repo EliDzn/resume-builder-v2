@@ -1,0 +1,82 @@
+@media (min-width: 768px) and (max-width: 1023px) {
+  .panelGroup {
+    display: grid !important;
+    grid-template-areas:
+      "editor preview"
+      "insights insights";
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(100vh, auto) minmax(50vh, auto);
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  .panel {
+    min-width: 0;
+    min-height: 0;
+    flex: none !important;
+  }
+
+  .editorPanel {
+    grid-area: editor;
+  }
+
+  .previewPanel {
+    grid-area: preview;
+    min-height: 100vh;
+  }
+
+  .insightPanel {
+    grid-area: insights;
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 50vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  .handle {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .panelGroup {
+    display: grid !important;
+    grid-template-areas:
+      "editor"
+      "preview"
+      "insights";
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(75vh, auto) minmax(100vh, auto) minmax(75vh, auto);
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  .panel {
+    min-width: 0;
+    min-height: 0;
+    flex: none !important;
+  }
+
+  .editorPanel {
+    grid-area: editor;
+  }
+
+  .previewPanel {
+    grid-area: preview;
+    min-height: 100vh;
+  }
+
+  .insightPanel {
+    grid-area: insights;
+    grid-column: 1;
+    width: 100%;
+    min-height: 75vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  .handle {
+    display: none !important;
+  }
+}

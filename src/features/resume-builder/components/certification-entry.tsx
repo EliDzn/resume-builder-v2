@@ -24,7 +24,6 @@ export default function CertificationEntry({
 
   const clearCertification = () => {
     updateCertification(certification.id, {
-      provider: "",
       title: "",
       completedDate: ""
     });
@@ -38,21 +37,6 @@ export default function CertificationEntry({
       >
         {certification.title || "Certification"}
       </EditorPanelLegend>
-
-      <InputField
-        id={`${certification.id}-provider`}
-        name={`${certification.id}-provider`}
-        label="Provider"
-        placeholder="Provider"
-        value={certification.provider}
-        required
-        error={errors[`certifications.${index}.provider`] ?? ""}
-        onChange={(event) =>
-          updateCertification(certification.id, {
-            provider: event.target.value
-          })
-        }
-      />
 
       <InputField
         id={`${certification.id}-title`}

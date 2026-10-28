@@ -32,6 +32,7 @@ export default function PreviewPanelReactPdf() {
   const pagesRef = useRef<HTMLDivElement>(null);
   const [hasRendered, setHasRendered] = useState(false);
   const [zoom, setZoom] = useState(1);
+  const [outputWidth, setOutputWidth] = useState(0);
   const [result, setResult] = useState<{
     key: string;
     error?: string;
@@ -79,6 +80,19 @@ export default function PreviewPanelReactPdf() {
     const output = pagesRef.current;
     if (!hasHydrated || !hasResumeContent || !output) return;
 
+    const observer = new ResizeObserver(() => {
+      const width = output.clientWidth;
+      setOutputWidth((current) => (current === width ? current : width));
+    });
+
+    observer.observe(output);
+    return () => observer.disconnect();
+  }, [hasHydrated, hasResumeContent]);
+
+  useEffect(() => {
+    const output = pagesRef.current;
+    if (!hasHydrated || !hasResumeContent || !output) return;
+
     let active = true;
     let loadingTask: ReturnType<typeof pdfjs.getDocument> | undefined;
     const textLayers = new Set<pdfjs.TextLayer>();
@@ -115,9 +129,12 @@ export default function PreviewPanelReactPdf() {
         const pdfDocument = await loadingTask.promise;
         const staging = document.createElement("div");
         staging.className =
-          "flex min-h-full w-max min-w-full flex-col items-center gap-6";
+          "flex min-h-full w-full min-w-0 flex-col items-center gap-6";
 
-        const availableWidth = Math.max(1, output.clientWidth - 32);
+        const availableWidth = Math.max(
+          1,
+          (outputWidth || output.clientWidth) - 32
+        );
         const outputScale = Math.min(window.devicePixelRatio || 1, 2);
 
         for (
@@ -225,7 +242,8 @@ export default function PreviewPanelReactPdf() {
     skills,
     fontFamily,
     zoom,
-    previewKey
+    previewKey,
+    outputWidth
   ]);
 
   if (!hasHydrated) {

@@ -23,6 +23,8 @@ const headings: Record<string, Section> = {
   "personal projects": "projects",
   certifications: "certifications",
   certificates: "certifications",
+  "licenses & certifications": "certifications",
+  "licenses and certifications": "certifications",
   skills: "skills",
   organizations: "ignored",
   education: "ignored"
@@ -195,19 +197,20 @@ export function parseResumeText(text: string): ResumeData {
   );
 
   const certifications = sections.certifications
-    .join(" ")
-    .split(/,\s*/)
-    .map((entry) => entry.trim())
+    .map(cleanBullet)
     .filter(Boolean)
     .map((entry) => {
       const dateMatch = entry.match(certificationDate);
-      const name = dateMatch ? entry.replace(dateMatch[0], "").trim() : entry;
-      const separator = name.indexOf(":");
+      const title = dateMatch
+        ? entry
+            .replace(dateMatch[0], "")
+            .replace(/[|,–—-]\s*$/, "")
+            .trim()
+        : entry;
 
       return {
         id: crypto.randomUUID(),
-        provider: separator >= 0 ? name.slice(0, separator).trim() : "",
-        title: separator >= 0 ? name.slice(separator + 1).trim() : name,
+        title,
         completedDate: dateMatch ? toInputMonth(dateMatch[1], dateMatch[2]) : ""
       };
     });

@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     textAlign: "center"
   },
   section: {
-    marginBottom: 2
+    marginBottom: 14
   },
   sectionTitle: {
     fontSize: BODY_SIZE,
@@ -63,6 +63,15 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     fontSize: BODY_SIZE,
     fontWeight: 700
+  },
+  lastEntry: {
+    marginBottom: 0
+  },
+  certificationSection: {
+    marginBottom: 0
+  },
+  lastCertificationEntry: {
+    marginBottom: 14
   },
   date: {
     flexShrink: 0,
@@ -200,17 +209,19 @@ export default function ResumeDocument({ resume }: ResumeDocumentProps) {
       )}
 
       {resume.certifications.length > 0 && (
-        <View style={styles.section}>
+        <View style={[styles.section, styles.certificationSection]}>
           <Text style={styles.sectionTitle}>Certifications</Text>
-
-          {resume.certifications.map((certification) => (
-            <View key={certification.id} style={styles.entry}>
+          {resume.certifications.map((certification, index) => (
+            <View
+              key={certification.id}
+              style={
+                index === resume.certifications.length - 1
+                  ? styles.lastCertificationEntry
+                  : undefined
+              }
+            >
               <View style={styles.entryHeader}>
-                <Text>
-                  {[certification.provider, certification.title]
-                    .filter(Boolean)
-                    .join(" ") || "Certification"}
-                </Text>
+                <Text>{certification.title}</Text>
                 <Text style={styles.date}>
                   {formatMonthYear(certification.completedDate)}
                 </Text>

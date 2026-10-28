@@ -34,8 +34,7 @@ function toResumeAIContext(resume: ResumeData) {
       techStack,
       bullets: bullets.filter((bullet) => bullet.trim())
     })),
-    certifications: resume.certifications.map(({ provider, title }) => ({
-      provider,
+    certifications: resume.certifications.map(({ title }) => ({
       title
     })),
     skills: resume.skills

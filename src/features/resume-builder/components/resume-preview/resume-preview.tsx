@@ -78,7 +78,6 @@ export default function ResumePreview({ resume }: ResumePreviewProps) {
             <div className={styles.entry} key={experience.id}>
               <div className={styles.entryHeader}>
                 <h3>{experience.company || "Untitled Company"}</h3>
-
                 <span>
                   {formatDateRange(experience.startDate, experience.endDate)}
                 </span>
@@ -116,20 +115,12 @@ export default function ResumePreview({ resume }: ResumePreviewProps) {
       )}
 
       {resume.certifications.length > 0 && (
-        <section className={styles.section}>
+        <section className={`${styles.section} ${styles.certifications}`}>
           <h2 className={styles.sectionTitle}>Certifications</h2>
-
           {resume.certifications.map((certification) => (
-            <div key={certification.id}>
-              <div className={styles.certEntry}>
-                <h3>
-                  {[certification.provider, certification.title]
-                    .filter(Boolean)
-                    .join(" ") || "Certification"}
-                </h3>
-
-                <span>{formatMonthYear(certification.completedDate)}</span>
-              </div>
+            <div className={styles.certEntry} key={certification.id}>
+              <h3>{certification.title}</h3>
+              <span>{formatMonthYear(certification.completedDate)}</span>
             </div>
           ))}
         </section>

@@ -56,9 +56,7 @@ export default function PreviewPanel() {
       )
     ) ||
     certifications.some((item) =>
-      [item.provider, item.title, item.completedDate].some((value) =>
-        value.trim()
-      )
+      [item.title, item.completedDate].some((value) => value.trim())
     ) ||
     Object.values(skills).some((values) => values.length > 0);
 
