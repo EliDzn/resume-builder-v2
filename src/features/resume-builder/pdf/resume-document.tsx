@@ -1,4 +1,4 @@
-import { Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Font, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import type { ResumeData } from "../model/resume-type";
 
 type ResumeDocumentProps = {
@@ -97,6 +97,25 @@ const styles = StyleSheet.create({
   }
 });
 
+Font.register({
+  family: "ResumeInter",
+  fonts: [
+    {
+      src: "/fonts/Inter/Inter_Regular.ttf",
+      fontWeight: 400
+    },
+    {
+      src: "/fonts/Inter/Inter_Bold.ttf",
+      fontWeight: 700
+    },
+    {
+      src: "/fonts/Inter/Inter_Italic.ttf",
+      fontStyle: "italic",
+      fontWeight: 400
+    }
+  ]
+});
+
 function formatMonthYear(value: string) {
   if (!value) return "";
 
@@ -134,7 +153,16 @@ export default function ResumeDocument({ resume }: ResumeDocumentProps) {
   const { personal } = resume;
 
   return (
-    <Page size="LETTER" style={styles.page}>
+    <Page
+      size="LETTER"
+      style={[
+        styles.page,
+        {
+          fontFamily:
+            resume.fontFamily === "inter" ? "ResumeInter" : "Times-Roman"
+        }
+      ]}
+    >
       <View style={styles.header}>
         <Text style={styles.name}>{personal.fullName || "Your Name"}</Text>
         {personal.role && <Text style={styles.role}>{personal.role}</Text>}
@@ -150,14 +178,12 @@ export default function ResumeDocument({ resume }: ResumeDocumentProps) {
             .join(" | ")}
         </Text>
       </View>
-
       {resume.summary.trim() && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Summary</Text>
           <Text style={styles.summary}>{resume.summary}</Text>
         </View>
       )}
-
       {resume.experiences.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Experience</Text>
@@ -182,7 +208,6 @@ export default function ResumeDocument({ resume }: ResumeDocumentProps) {
           ))}
         </View>
       )}
-
       {resume.projects.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Projects</Text>
@@ -207,7 +232,6 @@ export default function ResumeDocument({ resume }: ResumeDocumentProps) {
           ))}
         </View>
       )}
-
       {resume.certifications.length > 0 && (
         <View style={[styles.section, styles.certificationSection]}>
           <Text style={styles.sectionTitle}>Certifications</Text>
@@ -230,7 +254,6 @@ export default function ResumeDocument({ resume }: ResumeDocumentProps) {
           ))}
         </View>
       )}
-
       {Object.values(resume.skills).some((values) => values.length > 0) && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Skills</Text>
