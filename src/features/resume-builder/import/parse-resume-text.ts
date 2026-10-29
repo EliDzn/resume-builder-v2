@@ -69,6 +69,10 @@ const parseDateRange = (text: string) => {
 
   const firstDate = toInputMonth(match[1], match[2]);
 
+  if (match[5]) {
+    return { startDate: firstDate, endDate: "" };
+  }
+
   if (match[3]) {
     return {
       startDate: firstDate,

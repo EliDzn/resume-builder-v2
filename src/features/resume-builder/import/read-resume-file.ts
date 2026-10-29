@@ -55,6 +55,7 @@ export async function readResumeFile(file: File): Promise<string> {
 
   const normalizedText = text
     .replace(/\r\n?/g, "\n")
+    .replace(/[ \t]*\n[ \t]*/g, "\n")
     .replace(/[ \t]+/g, " ")
     .replace(/\n{3,}/g, "\n\n")
     .trim();

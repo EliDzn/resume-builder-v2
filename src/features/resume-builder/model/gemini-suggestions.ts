@@ -24,7 +24,6 @@ const resumeContextSchema = z
     certifications: z
       .array(
         z.object({
-          provider: z.string().trim().max(160),
           title: z.string().trim().max(200)
         })
       )
