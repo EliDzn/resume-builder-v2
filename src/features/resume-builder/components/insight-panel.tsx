@@ -14,6 +14,7 @@ import { downloadResumePdf } from "../pdf/download-resume-pdf";
 import ImportFileButton from "./import-file-button";
 import InsightEntry from "./insight-entry";
 import { usePreviewData } from "./use-preview-data";
+import { Wand } from "lucide-react";
 
 const SEVERITY_ORDER = {
   Error: 0,
@@ -255,7 +256,7 @@ export default function InsightPanel() {
           <Button
             type="button"
             variant="Primary"
-            className="w-full"
+            className="w-full gap-2"
             onClick={handleGenerateSuggestions}
             disabled={
               !hasHydrated ||
@@ -271,6 +272,7 @@ export default function InsightPanel() {
               : quotaStatus
                 ? `Generate Insights (${quotaStatus.remaining} remaining)`
                 : "Generate Insights"}
+            <Wand aria-hidden="true" className="h-4 w-4" />
           </Button>
         </div>
 
