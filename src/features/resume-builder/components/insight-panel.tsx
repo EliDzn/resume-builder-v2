@@ -239,6 +239,7 @@ export default function InsightPanel() {
           <h2 className="text-h2 font-semibold">Job Details</h2>
 
           <TextareaField
+            id="job-description"
             label="Job Description"
             placeholder="Paste the job description to get targeted resume suggestions."
             value={jobDescription}
