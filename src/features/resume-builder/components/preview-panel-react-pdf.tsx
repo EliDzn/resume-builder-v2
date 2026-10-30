@@ -16,6 +16,9 @@ const MAX_ZOOM = 2;
 const ZOOM_STEP = 0.05;
 const PREVIEW_DEBOUNCE_MS = 20;
 
+const adjustZoom = (current: number, change: number) =>
+  Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number((current + change).toFixed(2))));
+
 export default function PreviewPanelReactPdf() {
   const {
     personal,
@@ -60,15 +63,7 @@ export default function PreviewPanelReactPdf() {
 
       event.preventDefault();
       setZoom((current) =>
-        Math.min(
-          MAX_ZOOM,
-          Math.max(
-            MIN_ZOOM,
-            Number(
-              (current + (event.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP)).toFixed(2)
-            )
-          )
-        )
+        adjustZoom(current, event.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP)
       );
     };
 
@@ -256,7 +251,12 @@ export default function PreviewPanelReactPdf() {
 
   return (
     <section className="flex h-full min-h-0 w-full flex-col">
-      <PreviewToolbar />
+      <PreviewToolbar
+        onZoomOut={() => setZoom((current) => adjustZoom(current, -ZOOM_STEP))}
+        onZoomIn={() => setZoom((current) => adjustZoom(current, ZOOM_STEP))}
+        canZoomOut={hasResumeContent && zoom > MIN_ZOOM}
+        canZoomIn={hasResumeContent && zoom < MAX_ZOOM}
+      />
       {hasResumeContent ? (
         <div
           key="resume-preview"

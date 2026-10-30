@@ -2,6 +2,13 @@ import type { ReactNode } from "react";
 import { useResumeStore } from "../state/resume-store";
 import type { ResumeFont } from "../model/resume-type";
 
+type PreviewToolbarProps = {
+  onZoomOut: () => void;
+  onZoomIn: () => void;
+  canZoomOut: boolean;
+  canZoomIn: boolean;
+};
+
 type PreviewToolbarButtonProps = {
   children: ReactNode;
   disabled?: boolean;
@@ -67,7 +74,12 @@ function PreviewToolbarSelect() {
   );
 }
 
-export default function PreviewToolbar() {
+export default function PreviewToolbar({
+  onZoomOut,
+  onZoomIn,
+  canZoomOut,
+  canZoomIn
+}: PreviewToolbarProps) {
   const clearResume = useResumeStore((state) => state.clearResume);
   const hasHydrated = useResumeStore((state) => state.hasHydrated);
   const undo = useResumeStore((state) => state.undo);
@@ -106,8 +118,21 @@ export default function PreviewToolbar() {
 
       <PreviewToolbarButtonGroup className="border-l">
         <PreviewToolbarSelect />
-        <PreviewToolbarButton disabled>zoom out</PreviewToolbarButton>
-        <PreviewToolbarButton disabled>zoom in</PreviewToolbarButton>
+        <PreviewToolbarButton
+          onClick={onZoomOut}
+          disabled={!canZoomOut}
+          ariaLabel="Zoom out"
+        >
+          zoom out
+        </PreviewToolbarButton>
+
+        <PreviewToolbarButton
+          onClick={onZoomIn}
+          disabled={!canZoomIn}
+          ariaLabel="Zoom in"
+        >
+          zoom in
+        </PreviewToolbarButton>
       </PreviewToolbarButtonGroup>
     </div>
   );

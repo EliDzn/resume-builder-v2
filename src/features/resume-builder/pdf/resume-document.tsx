@@ -36,9 +36,7 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
     textAlign: "center"
   },
-  section: {
-    marginBottom: 14
-  },
+
   sectionTitle: {
     fontSize: BODY_SIZE,
     fontWeight: 700,
@@ -52,7 +50,7 @@ const styles = StyleSheet.create({
     marginTop: 0
   },
   entry: {
-    marginBottom: 10
+    marginBottom: 14
   },
   entryHeader: {
     flexDirection: "row",
@@ -179,13 +177,13 @@ export default function ResumeDocument({ resume }: ResumeDocumentProps) {
         </Text>
       </View>
       {resume.summary.trim() && (
-        <View style={styles.section}>
+        <View>
           <Text style={styles.sectionTitle}>Summary</Text>
           <Text style={styles.summary}>{resume.summary}</Text>
         </View>
       )}
       {resume.experiences.length > 0 && (
-        <View style={styles.section}>
+        <View>
           <Text style={styles.sectionTitle}>Experience</Text>
 
           {resume.experiences.map((experience) => (
@@ -209,7 +207,7 @@ export default function ResumeDocument({ resume }: ResumeDocumentProps) {
         </View>
       )}
       {resume.projects.length > 0 && (
-        <View style={styles.section}>
+        <View>
           <Text style={styles.sectionTitle}>Projects</Text>
 
           {resume.projects.map((project) => (
@@ -233,7 +231,7 @@ export default function ResumeDocument({ resume }: ResumeDocumentProps) {
         </View>
       )}
       {resume.certifications.length > 0 && (
-        <View style={[styles.section, styles.certificationSection]}>
+        <View style={styles.certificationSection}>
           <Text style={styles.sectionTitle}>Certifications</Text>
           {resume.certifications.map((certification, index) => (
             <View
@@ -255,7 +253,7 @@ export default function ResumeDocument({ resume }: ResumeDocumentProps) {
         </View>
       )}
       {Object.values(resume.skills).some((values) => values.length > 0) && (
-        <View style={styles.section}>
+        <View>
           <Text style={styles.sectionTitle}>Skills</Text>
           {(
             [
