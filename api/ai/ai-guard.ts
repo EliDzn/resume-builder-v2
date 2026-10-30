@@ -90,14 +90,10 @@ export async function runAIGuard<T>(options: {
     .digest("hex");
 
   const cacheKey = `ai:${environment}:suggestion:${payloadHash}`;
-  const cached = await redisCall(() => redis.get<string>(cacheKey));
+  const cached = await redisCall(() => redis.get<T>(cacheKey));
 
-  if (cached) {
-    try {
-      return JSON.parse(cached) as T;
-    } catch {
-      await redisCall(() => redis.del(cacheKey));
-    }
+  if (cached !== null) {
+    return cached;
   }
 
   const quotaKey = `ai:${environment}:quota:${ipHash}`;
@@ -186,9 +182,7 @@ export async function runAIGuard<T>(options: {
     quotaReserved = false;
 
     await redisCall(() =>
-      redis.set(cacheKey, JSON.stringify(result), {
-        ex: CACHE_TTL_SECONDS
-      })
+      redis.set(cacheKey, result, { ex: CACHE_TTL_SECONDS })
     );
 
     return result;

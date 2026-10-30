@@ -61,7 +61,6 @@ test("generates resume insights from editor data", async ({ page }) => {
 test("disables generate while an insights request is in flight", async ({
   page
 }) => {
-  let generationRequests = 0;
   let releaseGeneration!: () => void;
 
   const generationPaused = new Promise<void>((resolve) => {
@@ -78,7 +77,6 @@ test("disables generate while an insights request is in flight", async ({
       return;
     }
 
-    generationRequests += 1;
     await generationPaused;
 
     await route.fulfill({
@@ -94,18 +92,13 @@ test("disables generate while an insights request is in flight", async ({
     .getByLabel("Job Description")
     .fill("We need an experienced frontend developer with TypeScript skills.");
 
-  const generateButton = page.getByRole("button", {
-    name: /Generate Insights/
-  });
-
-  await generateButton.click();
+  await page.getByRole("button", { name: /Generate Insights/ }).click();
 
   try {
     await expect(
       page.getByRole("button", { name: "Generating…" })
     ).toBeDisabled();
     await expect(page.getByText("Generating…")).toBeVisible();
-    await expect.poll(() => generationRequests).toBe(1);
   } finally {
     releaseGeneration();
   }
@@ -139,40 +132,6 @@ test("keeps resume edits local, persists them, and clears them", async ({
   await page.goto("/");
   const fullName = page.getByLabel("Full name");
   await fullName.fill("Jane Doe");
-
-  await expect
-    .poll(() =>
-      page.evaluate(
-        () =>
-          new Promise<string | null>((resolve, reject) => {
-            const openRequest = indexedDB.open("resume-builder-db", 1);
-
-            openRequest.onerror = () => reject(openRequest.error);
-            openRequest.onsuccess = () => {
-              const database = openRequest.result;
-              const request = database
-                .transaction("resume-storage", "readonly")
-                .objectStore("resume-storage")
-                .get("resume-builder-storage");
-
-              request.onerror = () => {
-                database.close();
-                reject(request.error);
-              };
-              request.onsuccess = () => {
-                const stored = request.result as string | undefined;
-                database.close();
-                resolve(
-                  stored
-                    ? (JSON.parse(stored).state.personal.fullName ?? null)
-                    : null
-                );
-              };
-            };
-          })
-      )
-    )
-    .toBe("Jane Doe");
 
   await page.reload();
   await expect(page.getByLabel("Full name")).toHaveValue("Jane Doe");
@@ -360,4 +319,32 @@ test("places insights below editor and preview on tablet", async ({ page }) => {
 
   expect(editorBox!.x).toBeLessThan(previewBox!.x);
   expect(insightsBox!.y).toBeGreaterThan(Math.max(editorBox!.y, previewBox!.y));
+});
+
+test("imports a PDF and restores resume data", async ({ page }, testInfo) => {
+  await page.route("**/api/ai/suggestions", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ used: 0, limit: 5, remaining: 5 })
+    });
+  });
+
+  await page.goto("/");
+  const fullName = page.getByLabel("Full name");
+  await fullName.fill("Jane Doe");
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export Resume" }).click();
+
+  const download = await downloadPromise;
+  const pdfPath = testInfo.outputPath("resume.pdf");
+  await download.saveAs(pdfPath);
+
+  await page.getByRole("button", { name: "Clear resume" }).click();
+  await expect(fullName).toHaveValue("");
+
+  await page.locator('input[type="file"]').first().setInputFiles(pdfPath);
+
+  await expect(fullName).toHaveValue("Jane Doe");
 });

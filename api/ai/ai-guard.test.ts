@@ -60,7 +60,7 @@ describe("AI Redis guard", () => {
     expect(execute).toHaveBeenCalledOnce();
     expect(mocks.redisClient.set).toHaveBeenCalledWith(
       expect.stringMatching(/^ai:preview:suggestion:/),
-      JSON.stringify({ insights: [] }),
+      { insights: [] },
       { ex: 600 }
     );
     expect(mocks.redisClient.eval).toHaveBeenCalledTimes(4);
@@ -133,7 +133,7 @@ describe("AI Redis guard", () => {
 
   it("returns cached results without reserving quota", async () => {
     const cached = { insights: [{ title: "Cached" }] };
-    mocks.redisClient.get.mockResolvedValueOnce(JSON.stringify(cached));
+    mocks.redisClient.get.mockResolvedValueOnce(cached);
     const execute = vi.fn();
 
     await expect(
