@@ -156,7 +156,7 @@ export default function EditorPanel() {
   return (
     <SidePanel variant="left">
       <header className="shrink-0 px-4 py-9">
-        <h1 className="text-h1 font-bold">Optimized Resume Builder (v2)</h1>
+        <h1 className="text-h1 font-bold">Resume Builder (v2)</h1>
 
         <p className="mt-1 text-sm text-muted-foreground">
           An AI-powered, local-first resume builder for developers. Generate a
