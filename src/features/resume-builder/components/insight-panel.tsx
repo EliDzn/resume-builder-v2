@@ -275,6 +275,10 @@ export default function InsightPanel() {
                 : "Generate Insights"}
             <Wand aria-hidden="true" className="h-4 w-4" />
           </Button>
+          <p className="text-fine-print text-default">
+            Relevant resume information is sent to Google Gemini for AI
+            processing.
+          </p>
         </div>
 
         {generationError && (
