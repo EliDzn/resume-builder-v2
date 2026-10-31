@@ -47,7 +47,8 @@ const styles = StyleSheet.create({
     paddingBottom: 0.5
   },
   summary: {
-    marginTop: 0
+    marginTop: 0,
+    marginBottom: 14
   },
   entry: {
     marginBottom: 14
