@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import SidePanel from "./side-panel";
 import Button from "@/components/ui/button";
+import Modal from "@/components/ui/modal";
 import TextareaField from "@/components/ui/textarea-field";
+import SidePanel from "./side-panel";
 import { useResumeStore } from "../state/resume-store";
 import type { ResumeData } from "../model/resume-type";
 import {
@@ -34,6 +35,7 @@ export default function InsightPanel() {
 
   const { hasResumeContent } = usePreviewData();
 
+  const [consentOpen, setConsentOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const [jobDescription, setJobDescription] = useState("");
@@ -123,6 +125,7 @@ export default function InsightPanel() {
     requestControllerRef.current?.abort();
     requestControllerRef.current = null;
 
+    setConsentOpen(false);
     setJobDescription("");
     setSuggestions(null);
     setGenerationError(null);
@@ -153,7 +156,7 @@ export default function InsightPanel() {
     }
   };
 
-  const handleGenerateSuggestions = async () => {
+  const runGenerateSuggestions = async () => {
     if (requestControllerRef.current) {
       return;
     }
@@ -203,6 +206,15 @@ export default function InsightPanel() {
         void refreshQuotaStatus();
       }
     }
+  };
+
+  const handleGenerateSuggestions = () => {
+    setConsentOpen(true);
+  };
+
+  const handleConsentAndGenerate = () => {
+    setConsentOpen(false);
+    void runGenerateSuggestions();
   };
 
   const sortedInsights = suggestions
@@ -275,9 +287,11 @@ export default function InsightPanel() {
                 : "Generate Insights"}
             <Wand aria-hidden="true" className="h-4 w-4" />
           </Button>
+
           <p className="text-fine-print text-default">
-            Relevant resume information is sent to Google Gemini for AI
-            processing.
+            Resume details and the job description are sent to the app server
+            and Google Gemini only after you confirm. Automatic redaction can
+            miss identifying details.
           </p>
         </div>
 
@@ -309,6 +323,47 @@ export default function InsightPanel() {
           </section>
         )}
       </div>
+
+      <Modal
+        open={consentOpen}
+        onClose={() => setConsentOpen(false)}
+        title="Send resume details for AI insights?"
+      >
+        <p>
+          To generate personalized insights, the app sends your job description
+          and selected resume details to its server, which forwards them to
+          Google Gemini. Details include your role, summary, experience roles
+          and bullets, project technology stacks and bullets, certification
+          titles, and skills.
+        </p>
+
+        <p>
+          The app removes known full names, company names, and project names,
+          plus detected emails, URLs, and clearly formatted North American phone
+          numbers. Automatic redaction can miss identifying details.
+          Certification titles remain included.
+        </p>
+
+        <p>
+          Upstash Redis handles quota and concurrency controls. It stores a
+          hashed IP-derived quota key for up to 24 hours and temporary request
+          locks for up to 60 seconds. It does not store generated insight
+          results.
+        </p>
+
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="Secondary"
+            onClick={() => setConsentOpen(false)}
+          >
+            Cancel
+          </Button>
+          <Button type="button" onClick={handleConsentAndGenerate}>
+            Continue and send
+          </Button>
+        </div>
+      </Modal>
     </SidePanel>
   );
 }

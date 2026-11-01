@@ -4,7 +4,6 @@ import { env } from "node:process";
 
 const DAILY_LIMIT = 5;
 const DAILY_TTL_SECONDS = 24 * 60 * 60;
-const CACHE_TTL_SECONDS = 10 * 60;
 const IP_LOCK_TTL_MS = 60 * 1000;
 const GLOBAL_CONCURRENCY_LIMIT = 10;
 
@@ -81,20 +80,9 @@ export async function getAIQuotaStatus(request: Request): Promise<{
 
 export async function runAIGuard<T>(options: {
   request: Request;
-  payload: unknown;
   execute: () => Promise<T>;
 }): Promise<T> {
   const { redis, environment, ipHash } = getGuardContext(options.request);
-  const payloadHash = createHash("sha256")
-    .update(JSON.stringify(options.payload))
-    .digest("hex");
-
-  const cacheKey = `ai:${environment}:suggestion:${payloadHash}`;
-  const cached = await redisCall(() => redis.get<T>(cacheKey));
-
-  if (cached !== null) {
-    return cached;
-  }
 
   const quotaKey = `ai:${environment}:quota:${ipHash}`;
   const lockToken = randomUUID();
@@ -180,10 +168,6 @@ export async function runAIGuard<T>(options: {
     );
 
     quotaReserved = false;
-
-    await redisCall(() =>
-      redis.set(cacheKey, result, { ex: CACHE_TTL_SECONDS })
-    );
 
     return result;
   } finally {

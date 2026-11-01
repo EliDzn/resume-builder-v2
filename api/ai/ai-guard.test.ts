@@ -46,24 +46,50 @@ describe("AI Redis guard", () => {
     vi.unstubAllEnvs();
   });
 
-  it("runs generation, caches the result, and releases locks", async () => {
+  it("runs generation, releases locks, and does not cache results", async () => {
     const execute = vi.fn().mockResolvedValue({ insights: [] });
 
     await expect(
       runAIGuard({
         request: createRequest(),
-        payload: { input: "resume" },
         execute
       })
     ).resolves.toEqual({ insights: [] });
 
     expect(execute).toHaveBeenCalledOnce();
-    expect(mocks.redisClient.set).toHaveBeenCalledWith(
-      expect.stringMatching(/^ai:preview:suggestion:/),
-      { insights: [] },
-      { ex: 600 }
-    );
     expect(mocks.redisClient.eval).toHaveBeenCalledTimes(4);
+    expect(mocks.redisClient.get).not.toHaveBeenCalled();
+    expect(mocks.redisClient.set).not.toHaveBeenCalled();
+
+    const redisKeys = mocks.redisClient.eval.mock.calls
+      .flatMap((call) => call[1] as string[])
+      .join(" ");
+
+    expect(redisKeys).not.toContain("suggestion");
+  });
+
+  it("executes identical requests separately without caching results", async () => {
+    const execute = vi
+      .fn()
+      .mockResolvedValueOnce({ insights: [{ title: "First" }] })
+      .mockResolvedValueOnce({ insights: [{ title: "Second" }] });
+
+    const options = {
+      request: createRequest(),
+      execute
+    };
+
+    await expect(runAIGuard(options)).resolves.toEqual({
+      insights: [{ title: "First" }]
+    });
+    await expect(runAIGuard(options)).resolves.toEqual({
+      insights: [{ title: "Second" }]
+    });
+
+    expect(execute).toHaveBeenCalledTimes(2);
+    expect(mocks.redisClient.get).not.toHaveBeenCalled();
+    expect(mocks.redisClient.set).not.toHaveBeenCalled();
+    expect(mocks.redisClient.eval).toHaveBeenCalledTimes(8);
   });
 
   it("rolls back quota when generation fails", async () => {
@@ -72,7 +98,6 @@ describe("AI Redis guard", () => {
     await expect(
       runAIGuard({
         request: createRequest(),
-        payload: { input: "failed resume" },
         execute
       })
     ).rejects.toThrow("generation failed");
@@ -97,7 +122,6 @@ describe("AI Redis guard", () => {
     await expect(
       runAIGuard({
         request: createRequest(),
-        payload: { input: "locked resume" },
         execute
       })
     ).rejects.toMatchObject({ status: 429 });
@@ -122,7 +146,6 @@ describe("AI Redis guard", () => {
     await expect(
       runAIGuard({
         request: createRequest(),
-        payload: { input: "over quota" },
         execute
       })
     ).rejects.toMatchObject({ status: 429 });
@@ -131,31 +154,16 @@ describe("AI Redis guard", () => {
     expect(mocks.redisClient.eval).toHaveBeenCalledOnce();
   });
 
-  it("returns cached results without reserving quota", async () => {
-    const cached = { insights: [{ title: "Cached" }] };
-    mocks.redisClient.get.mockResolvedValueOnce(cached);
-    const execute = vi.fn();
-
-    await expect(
-      runAIGuard({
-        request: createRequest(),
-        payload: { input: "cached resume" },
-        execute
-      })
-    ).resolves.toEqual(cached);
-
-    expect(execute).not.toHaveBeenCalled();
-    expect(mocks.redisClient.eval).not.toHaveBeenCalled();
-  });
-
   it("fails closed when Redis is unavailable", async () => {
-    mocks.redisClient.get.mockRejectedValueOnce(new Error("Redis unavailable"));
+    mocks.redisClient.eval
+      .mockRejectedValueOnce(new Error("Redis unavailable"))
+      .mockResolvedValueOnce(1);
+
     const execute = vi.fn();
 
     await expect(
       runAIGuard({
         request: createRequest(),
-        payload: { input: "resume" },
         execute
       })
     ).rejects.toMatchObject({ status: 503 });

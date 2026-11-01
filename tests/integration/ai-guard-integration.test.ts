@@ -16,7 +16,6 @@ const IP = "198.51.100.17";
 
 type CleanupTarget = {
   environment: string;
-  payload: unknown;
   ip: string;
 };
 
@@ -40,10 +39,9 @@ function createRequest(ip = IP) {
   });
 }
 
-function track(payload: unknown, ip = IP) {
+function track(ip = IP) {
   cleanupTargets.push({
     environment: activeEnvironment,
-    payload,
     ip
   });
 }
@@ -78,11 +76,9 @@ describe("AI guard with real Upstash Redis", () => {
     try {
       for (const target of cleanupTargets) {
         const ipHash = hash(target.ip);
-        const payloadHash = hash(JSON.stringify(target.payload));
 
         await redis.del(
           `ai:${target.environment}:quota:${ipHash}`,
-          `ai:${target.environment}:suggestion:${payloadHash}`,
           `ai:${target.environment}:lock:ip:${ipHash}`,
           `ai:${target.environment}:lock:global`
         );
@@ -92,11 +88,8 @@ describe("AI guard with real Upstash Redis", () => {
     }
   });
 
-  it("allows only one in-flight request per IP and rolls back rejected quota", async () => {
-    const firstPayload = { case: "first-request" };
-    const secondPayload = { case: "overlapping-request" };
-    track(firstPayload);
-    track(secondPayload);
+  it("allows one in-flight request per IP and rolls back rejected quota", async () => {
+    track();
 
     let signalEntered!: () => void;
     const entered = new Promise<void>((resolve) => {
@@ -110,7 +103,6 @@ describe("AI guard with real Upstash Redis", () => {
 
     const firstRequest = runAIGuard({
       request: createRequest(),
-      payload: firstPayload,
       execute: async () => {
         signalEntered();
         await held;
@@ -124,7 +116,6 @@ describe("AI guard with real Upstash Redis", () => {
       await expect(
         runAIGuard({
           request: createRequest(),
-          payload: secondPayload,
           execute: async () => ({ result: "second" })
         })
       ).rejects.toMatchObject({ status: 429 });
@@ -141,13 +132,11 @@ describe("AI guard with real Upstash Redis", () => {
   });
 
   it("rolls back quota when generation fails", async () => {
-    const payload = { case: "failed-generation" };
-    track(payload);
+    track();
 
     await expect(
       runAIGuard({
         request: createRequest(),
-        payload,
         execute: async () => {
           throw new Error("generation failed");
         }
@@ -161,51 +150,46 @@ describe("AI guard with real Upstash Redis", () => {
     });
   });
 
-  it("returns cached results without charging quota twice", async () => {
-    const payload = { case: "identical-input-cache" };
-    track(payload);
+  it("generates identical requests separately without caching results", async () => {
+    track();
 
-    const execute = vi.fn().mockResolvedValue({ result: "generated" });
+    const execute = vi
+      .fn()
+      .mockResolvedValueOnce({ result: "first" })
+      .mockResolvedValueOnce({ result: "second" });
+
     const options = {
       request: createRequest(),
-      payload,
       execute
     };
 
-    await expect(runAIGuard(options)).resolves.toEqual({
-      result: "generated"
-    });
-    await expect(runAIGuard(options)).resolves.toEqual({
-      result: "generated"
-    });
+    await expect(runAIGuard(options)).resolves.toEqual({ result: "first" });
+    await expect(runAIGuard(options)).resolves.toEqual({ result: "second" });
 
-    expect(execute).toHaveBeenCalledOnce();
+    expect(execute).toHaveBeenCalledTimes(2);
     await expect(getAIQuotaStatus(createRequest())).resolves.toMatchObject({
-      used: 1,
+      used: 2,
       limit: 5,
-      remaining: 4
+      remaining: 3
     });
   });
 
   it("isolates preview-like and production-like environment namespaces", async () => {
-    const payload = { case: "environment-isolation" };
     const execute = vi.fn(async () => ({ result: randomUUID() }));
 
     const previewEnvironment = setEnvironment("preview");
-    track(payload);
+    track();
 
     const previewResult = await runAIGuard({
       request: createRequest(),
-      payload,
       execute
     });
 
     const productionEnvironment = setEnvironment("production");
-    track(payload);
+    track();
 
     const productionResult = await runAIGuard({
       request: createRequest(),
-      payload,
       execute
     });
 

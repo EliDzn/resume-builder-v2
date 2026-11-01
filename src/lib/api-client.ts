@@ -21,23 +21,68 @@ function getErrorMessage(payload: unknown, fallback: string): string {
   return result.success ? result.data.error : fallback;
 }
 
-function toResumeAIContext(resume: ResumeData) {
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
+const URL_PATTERN =
+  /\b(?:https?:\/\/|www\.)[^\s<>()]+|\b(?:[A-Z0-9-]+\.)+(?:com|org|net|edu|gov|io|co|dev|app|me|info|biz)(?:\/[^\s<>()]*)?/gi;
+const PHONE_PATTERN =
+  /(^|[^\w])((?:\+1[ -.]?)?(?:\(\d{3}\)[ -]?\d{3}[-.]\d{4}|\d{3}[-.]\d{3}[-.]\d{4}))(?=$|[^\w])/g;
+
+function createRedactor(resume: ResumeData) {
+  const knownNames = [
+    resume.personal.fullName,
+    ...resume.experiences.map(({ company }) => company),
+    ...resume.projects.map(({ name }) => name)
+  ]
+    .map((value) => value.trim())
+    .filter((value) => value.length > 2)
+    .sort((a, b) => b.length - a.length);
+
+  const knownNamesPattern = knownNames.length
+    ? new RegExp(knownNames.map(escapeRegExp).join("|"), "gi")
+    : null;
+
+  return (text: string) => {
+    const scrubbed = knownNamesPattern
+      ? text.replace(knownNamesPattern, "[REDACTED]")
+      : text;
+
+    return scrubbed
+      .replace(EMAIL_PATTERN, "[REDACTED]")
+      .replace(URL_PATTERN, "[REDACTED]")
+      .replace(
+        PHONE_PATTERN,
+        (_match, prefix: string) => `${prefix}[REDACTED]`
+      );
+  };
+}
+
+function toResumeAIContext(
+  resume: ResumeData,
+  scrub: (text: string) => string
+) {
   return {
-    role: resume.personal.role,
-    summary: resume.summary,
+    role: scrub(resume.personal.role),
+    summary: scrub(resume.summary),
     experiences: resume.experiences.map(({ role, bullets }) => ({
-      role,
-      bullets: bullets.filter((bullet) => bullet.trim())
+      role: scrub(role),
+      bullets: bullets.filter((bullet) => bullet.trim()).map(scrub)
     })),
-    projects: resume.projects.map(({ name, techStack, bullets }) => ({
-      name,
-      techStack,
-      bullets: bullets.filter((bullet) => bullet.trim())
+    projects: resume.projects.map(({ techStack, bullets }, index) => ({
+      label: `Project ${index + 1}`,
+      techStack: scrub(techStack),
+      bullets: bullets.filter((bullet) => bullet.trim()).map(scrub)
     })),
     certifications: resume.certifications.map(({ title }) => ({
-      title
+      title: scrub(title)
     })),
-    skills: resume.skills
+    skills: {
+      frontend: resume.skills.frontend.map(scrub),
+      backend: resume.skills.backend.map(scrub),
+      tools: resume.skills.tools.map(scrub)
+    }
   };
 }
 
@@ -75,9 +120,10 @@ export async function generateResumeSuggestions(
   resume: ResumeData,
   signal?: AbortSignal
 ): Promise<ResumeSuggestions> {
+  const scrub = createRedactor(resume);
   const request = ResumeSuggestionsRequestSchema.safeParse({
-    jobDescription,
-    resume: toResumeAIContext(resume)
+    jobDescription: scrub(jobDescription),
+    resume: toResumeAIContext(resume, scrub)
   });
 
   if (!request.success) {

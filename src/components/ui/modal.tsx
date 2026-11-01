@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import Button from "./button";
+import { X } from "lucide-react";
 
 type ModalProps = {
   open: boolean;
@@ -31,14 +31,14 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
-      className="max-h-[85vh] w-11/12 max-w-2xl overflow-y-auto rounded-lg border border-foreground bg-background p-0 text-foreground shadow-xl backdrop:bg-black/50"
+      className="modal-scrollbar max-h-4/5 w-9/10 lg:w-3/5 max-w-2xl overflow-y-auto rounded-lg bg-background p-0 text-foreground  backdrop:bg-foreground/50 fixed left-1/2 top-1/2 m-0 -translate-x-1/2 -translate-y-1/2"
     >
       <div className="space-y-5 p-6">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-xl font-semibold">{title}</h2>
-          <Button variant="Secondary" onClick={onClose}>
-            Close
-          </Button>
+          <button className="hover:cursor-pointer" onClick={onClose}>
+            <X />
+          </button>
         </div>
 
         <div className="space-y-4 text-sm leading-6">{children}</div>

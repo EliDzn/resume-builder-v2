@@ -31,7 +31,7 @@ export default function Footer() {
           <p>
             Resume edits are stored in IndexedDB in this browser on this device.
             They remain there until you clear them in the app or clear this
-            site’s browser data. PDF and DOCX files are read in your browser
+            site's browser data. PDF and DOCX files are read in your browser
             when imported.
           </p>
         </section>
@@ -39,23 +39,36 @@ export default function Footer() {
         <section>
           <h3 className="font-semibold">Google Gemini – AI processing</h3>
           <p>
-            When you request AI insights, the job description and selected
-            resume details are sent to the app server and forwarded to Google
-            Gemini. These details include your target role, summary, experience
-            roles and bullets, project names, technology stacks and bullets,
-            certification titles, and skills. Contact details, company names,
-            and dates are not included in this request. Google’s handling
-            depends on the service and account terms used.
+            When you confirm a request for AI insights, the job description and
+            selected resume details are sent to the app server and forwarded to
+            Google Gemini. These details include your target role, summary,
+            experience roles and bullets, project labels, technology stacks and
+            bullets, certification titles, and skills. Contact details, company
+            names, dates, and actual project names are omitted from the request.
+          </p>
+          <p>
+            Before sending, the app attempts to redact known names, email
+            addresses, URLs, and clearly formatted North American phone numbers
+            from text. Automatic redaction can miss identifying details.
+            Certification titles remain included and may themselves identify
+            information.
+          </p>
+          <p>
+            Google's processing and retention depend on the Gemini service and
+            account terms used. Review Google's applicable terms before sending
+            sensitive information.
           </p>
         </section>
 
         <section>
-          <h3 className="font-semibold">Upstash Redis – temporary caching</h3>
+          <h3 className="font-semibold">
+            Upstash Redis – quota and concurrency
+          </h3>
           <p>
-            Redis supports request limits, concurrency protection, and caching.
-            Identical AI requests may reuse a cached response for up to 10
-            minutes. Quota counters expire after 24 hours. The app uses a hashed
-            IP address in quota keys; Preview and Production use separate key
+            Redis supports request limits and concurrency controls. It stores a
+            hashed IP-derived quota key for up to 24 hours and temporary request
+            locks for up to 60 seconds. Generated insight results are not cached
+            by the app's Redis guard. Preview and Production use separate key
             namespaces.
           </p>
         </section>
@@ -65,19 +78,19 @@ export default function Footer() {
           <p>
             Vercel hosts the app and its server-side API. Requests pass through
             its infrastructure, which may process operational data under
-            Vercel’s terms and policies.
+            Vercel's terms and policies.
           </p>
         </section>
 
         <section>
           <h3 className="font-semibold">Data retention and deletion</h3>
           <p>
-            Clear resume data in the app or clear this site’s browser data to
-            remove locally stored resume information. Redis cache entries expire
-            after 10 minutes, quota counters after 24 hours, and concurrency
-            locks after up to 60 seconds. Clearing browser data does not delete
-            information already sent to Gemini or records retained by service
-            providers under their policies.
+            Clear resume data in the app or clear this site's browser data to
+            remove locally stored resume information. Redis quota counters
+            expire after 24 hours, and concurrency locks expire after up to 60
+            seconds. Clearing browser data does not delete information already
+            sent to Gemini or records retained by service providers under their
+            policies.
           </p>
         </section>
 

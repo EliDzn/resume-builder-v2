@@ -164,7 +164,6 @@ export default {
     try {
       const suggestions = await runAIGuard<ResumeSuggestions>({
         request,
-        payload: parsedRequest.data,
         execute: async () => {
           const controller = new AbortController();
           const timeout = setTimeout(

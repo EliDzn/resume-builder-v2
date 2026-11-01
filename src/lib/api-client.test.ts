@@ -82,11 +82,43 @@ describe("AI API client", () => {
     );
   });
 
-  it("sends a validated generation request and returns suggestions", async () => {
+  it("sends only the allowed resume fields", async () => {
     vi.mocked(fetch).mockResolvedValue(Response.json(suggestions));
 
+    const resumeWithIdentifiers: ResumeData = {
+      ...resume,
+      personal: {
+        ...resume.personal,
+        fullName: "Jane Doe",
+        location: "Vancouver",
+        phone: "555-0100",
+        email: "jane@example.com",
+        linkedin: "https://linkedin.com/in/janedoe",
+        github: "https://github.com/janedoe"
+      },
+      experiences: [
+        {
+          id: "experience-1",
+          role: "Engineer",
+          company: "Example Corp",
+          startDate: "2023-01",
+          endDate: "2024-01",
+          bullets: ["Built accessible pages"]
+        }
+      ],
+      projects: [
+        {
+          id: "project-1",
+          name: "Jane's Billing Dashboard",
+          techStack: "React and TypeScript",
+          endDate: "2024-02",
+          bullets: ["Improved dashboard performance"]
+        }
+      ]
+    };
+
     await expect(
-      generateResumeSuggestions(validJobDescription, resume)
+      generateResumeSuggestions(validJobDescription, resumeWithIdentifiers)
     ).resolves.toEqual(suggestions);
 
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -94,10 +126,33 @@ describe("AI API client", () => {
     const [, options] = vi.mocked(fetch).mock.calls[0];
     expect(options?.method).toBe("POST");
 
-    const body = JSON.parse(String(options?.body));
-    expect(body.resume.certifications).toEqual([
-      { title: "Cloud Developer Certification" }
-    ]);
+    expect(JSON.parse(String(options?.body))).toEqual({
+      jobDescription: validJobDescription,
+      resume: {
+        role: "Frontend Developer",
+        summary:
+          "Frontend developer experienced with accessible web applications.",
+        experiences: [
+          {
+            role: "Engineer",
+            bullets: ["Built accessible pages"]
+          }
+        ],
+        projects: [
+          {
+            label: "Project 1",
+            techStack: "React and TypeScript",
+            bullets: ["Improved dashboard performance"]
+          }
+        ],
+        certifications: [{ title: "Cloud Developer Certification" }],
+        skills: {
+          frontend: ["TypeScript"],
+          backend: [],
+          tools: []
+        }
+      }
+    });
   });
 
   it("does not send a request when the job description is invalid", async () => {
