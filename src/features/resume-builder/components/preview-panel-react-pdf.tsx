@@ -1,15 +1,10 @@
-import { Document, pdf } from "@react-pdf/renderer";
 import { useEffect, useRef, useState } from "react";
-import * as pdfjs from "pdfjs-dist";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import "pdfjs-dist/web/pdf_viewer.css";
 import PreviewToolbar from "./preview-toolbar";
 import ImportFileButton from "./import-file-button";
-import ResumeDocument from "../pdf/resume-document";
 import { usePreviewData } from "./use-preview-data";
 import type { ResumeData } from "../model/resume-type";
-
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+import type * as pdfjsTypes from "pdfjs-dist";
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2;
@@ -89,8 +84,8 @@ export default function PreviewPanelReactPdf() {
     if (!hasHydrated || !hasResumeContent || !output) return;
 
     let active = true;
-    let loadingTask: ReturnType<typeof pdfjs.getDocument> | undefined;
-    const textLayers = new Set<pdfjs.TextLayer>();
+    let loadingTask: ReturnType<typeof pdfjsTypes.getDocument> | undefined;
+    const textLayers = new Set<pdfjsTypes.TextLayer>();
 
     const destroyLoadingTask = () => {
       const task = loadingTask;
@@ -100,6 +95,14 @@ export default function PreviewPanelReactPdf() {
 
     const renderPreview = async () => {
       try {
+        const [{ Document, pdf }, { default: ResumeDocument }] =
+          await Promise.all([
+            import("@react-pdf/renderer"),
+            import("../pdf/resume-document")
+          ]);
+
+        if (!active) return;
+
         const resume: ResumeData = {
           personal,
           summary,
@@ -109,11 +112,19 @@ export default function PreviewPanelReactPdf() {
           skills,
           fontFamily
         };
+
         const blob = await pdf(
           <Document title={personal.fullName || "Resume"}>
             <ResumeDocument resume={resume} />
           </Document>
         ).toBlob();
+
+        if (!active) return;
+
+        const pdfjs = await import("pdfjs-dist");
+        const { default: pdfWorkerUrl } =
+          await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
+        pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
         if (!active) return;
 

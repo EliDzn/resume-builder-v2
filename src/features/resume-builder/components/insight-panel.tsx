@@ -11,7 +11,6 @@ import {
   type AIQuotaStatus
 } from "@/lib/api-client";
 import type { ResumeSuggestions } from "../model/gemini-suggestions";
-import { downloadResumePdf } from "../pdf/download-resume-pdf";
 import ImportFileButton from "./import-file-button";
 import InsightEntry from "./insight-entry";
 import { usePreviewData } from "./use-preview-data";
@@ -145,6 +144,7 @@ export default function InsightPanel() {
     setExportError(null);
 
     try {
+      const { downloadResumePdf } = await import("../pdf/download-resume-pdf");
       await downloadResumePdf(resume);
     } catch (error) {
       console.error("PDF export failed:", error);
