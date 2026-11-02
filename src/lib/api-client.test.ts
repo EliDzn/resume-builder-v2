@@ -10,7 +10,8 @@ const resume: ResumeData = {
     phone: "",
     email: "",
     linkedin: "",
-    github: ""
+    github: "",
+    portfolio: ""
   },
   summary: "Frontend developer experienced with accessible web applications.",
   experiences: [],
@@ -94,7 +95,8 @@ describe("AI API client", () => {
         phone: "555-0100",
         email: "jane@example.com",
         linkedin: "https://linkedin.com/in/janedoe",
-        github: "https://github.com/janedoe"
+        github: "https://github.com/janedoe",
+        portfolio: "https://jane.dev"
       },
       experiences: [
         {

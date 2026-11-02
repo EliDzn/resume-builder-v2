@@ -181,7 +181,8 @@ const initialPersonal: PersonalInfo = {
   phone: "",
   email: "",
   linkedin: "",
-  github: ""
+  github: "",
+  portfolio: ""
 };
 
 function createInitialResumeData(): ResumeData {
@@ -578,13 +579,17 @@ export const useResumeStore = create<ResumeStore>()(
     {
       name: STORAGE_KEY,
       storage: createJSONStorage(() => indexedDbStorage),
-      version: 3,
+      version: 4,
       partialize: (state) => ({
         ...getResumeData(state),
         customSkillOptions: state.customSkillOptions
       }),
       migrate: (persistedState) => {
-        const state = persistedState as Partial<ResumeData> & {
+        const state = persistedState as Omit<
+          Partial<ResumeData>,
+          "personal"
+        > & {
+          personal?: Partial<PersonalInfo>;
           skills?: Partial<Record<keyof ResumeSkills, unknown>>;
           customSkillOptions?: Partial<Record<keyof ResumeSkills, unknown>>;
         };
@@ -606,6 +611,11 @@ export const useResumeStore = create<ResumeStore>()(
 
         return {
           ...state,
+          personal: {
+            ...initialPersonal,
+            ...state.personal,
+            portfolio: state.personal?.portfolio ?? ""
+          },
           skills: {
             frontend: toSkillArray(state.skills?.frontend),
             backend: toSkillArray(state.skills?.backend),

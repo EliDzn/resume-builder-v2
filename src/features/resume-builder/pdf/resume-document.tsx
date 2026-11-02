@@ -33,6 +33,7 @@ const styles = StyleSheet.create({
     marginBottom: 4
   },
   contact: {
+    width: "100%",
     fontSize: 10.5,
     textAlign: "center"
   },
@@ -165,13 +166,14 @@ export default function ResumeDocument({ resume }: ResumeDocumentProps) {
       <View style={styles.header}>
         <Text style={styles.name}>{personal.fullName || "Your Name"}</Text>
         {personal.role && <Text style={styles.role}>{personal.role}</Text>}
-        <Text style={styles.contact}>
+        <Text style={styles.contact} hyphenationCallback={(word) => [word]}>
           {[
             personal.location,
             personal.phone,
             personal.email,
             personal.linkedin,
-            personal.github
+            personal.github,
+            personal.portfolio
           ]
             .filter(Boolean)
             .join(" | ")}

@@ -22,7 +22,8 @@ Tools: Git, Playwright`);
       email: "jane@example.com",
       phone: "+1 (555) 123-4567",
       linkedin: "linkedin.com/in/janedoe",
-      github: "github.com/janedoe"
+      github: "github.com/janedoe",
+      portfolio: ""
     });
     expect(resume.summary).toBe(
       "Frontend developer with accessibility experience."

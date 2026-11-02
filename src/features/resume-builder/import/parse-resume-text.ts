@@ -249,7 +249,8 @@ export function parseResumeText(text: string): ResumeData {
       phone,
       email,
       linkedin,
-      github
+      github,
+      portfolio: ""
     },
     summary: sections.summary.filter(Boolean).join("\n"),
     experiences,

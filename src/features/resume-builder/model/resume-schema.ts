@@ -176,7 +176,8 @@ export const resumeSchema = z
       phone: z.string(),
       email: optionalEmail,
       linkedin: optionalUrl,
-      github: optionalUrl
+      github: optionalUrl,
+      portfolio: optionalUrl
     }),
     summary: z.string(),
     experiences: z.array(experienceSchema),

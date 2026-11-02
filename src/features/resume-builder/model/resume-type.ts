@@ -8,6 +8,7 @@ export type PersonalInfo = {
   email: string;
   linkedin: string;
   github: string;
+  portfolio: string;
 };
 
 export type Experience = {

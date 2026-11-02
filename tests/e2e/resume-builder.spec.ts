@@ -32,7 +32,7 @@ test("generates resume insights from editor data", async ({ page }) => {
   await page.goto("/");
 
   await expect(
-    page.getByRole("heading", { name: "Optimized Resume Builder (v2)" })
+    page.getByRole("heading", { name: "Resume Builder (v2)" })
   ).toBeVisible();
 
   const generateButton = page.getByRole("button", {
@@ -48,6 +48,11 @@ test("generates resume insights from editor data", async ({ page }) => {
 
   await expect(generateButton).toBeEnabled();
   await generateButton.click();
+
+  await page
+    .getByRole("dialog", { name: "Send resume details for AI insights?" })
+    .getByRole("button", { name: "Continue and send" })
+    .click();
 
   await expect(
     page.getByRole("heading", { name: "Resume Insights" })
@@ -93,6 +98,10 @@ test("disables generate while an insights request is in flight", async ({
     .fill("We need an experienced frontend developer with TypeScript skills.");
 
   await page.getByRole("button", { name: /Generate Insights/ }).click();
+  await page
+    .getByRole("dialog", { name: "Send resume details for AI insights?" })
+    .getByRole("button", { name: "Continue and send" })
+    .click();
 
   try {
     await expect(
@@ -131,13 +140,18 @@ test("keeps resume edits local, persists them, and clears them", async ({
 
   await page.goto("/");
   const fullName = page.getByLabel("Full name");
+  const portfolio = page.getByLabel("Portfolio Link");
+
   await fullName.fill("Jane Doe");
+  await portfolio.fill("https://jane.dev");
 
   await page.reload();
-  await expect(page.getByLabel("Full name")).toHaveValue("Jane Doe");
+  await expect(fullName).toHaveValue("Jane Doe");
+  await expect(portfolio).toHaveValue("https://jane.dev");
 
   await page.getByRole("button", { name: "Clear resume" }).click();
-  await expect(page.getByLabel("Full name")).toHaveValue("");
+  await expect(fullName).toHaveValue("");
+  await expect(portfolio).toHaveValue("");
   await expect(
     page.getByRole("heading", { name: "Already have a resume?" })
   ).toBeVisible();
@@ -262,6 +276,10 @@ test("shows generation errors and allows retry", async ({ page }) => {
   });
 
   await generateButton.click();
+  await page
+    .getByRole("dialog", { name: "Send resume details for AI insights?" })
+    .getByRole("button", { name: "Continue and send" })
+    .click();
 
   await expect(page.getByRole("alert")).toHaveText(
     "The AI service could not generate suggestions."
@@ -269,6 +287,10 @@ test("shows generation errors and allows retry", async ({ page }) => {
   await expect(generateButton).toBeEnabled();
 
   await generateButton.click();
+  await page
+    .getByRole("dialog", { name: "Send resume details for AI insights?" })
+    .getByRole("button", { name: "Continue and send" })
+    .click();
 
   await expect(
     page.getByText("Retry succeeded", { exact: true })

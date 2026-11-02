@@ -11,7 +11,8 @@ function createValidResume(): ResumeData {
       phone: "",
       email: "",
       linkedin: "",
-      github: ""
+      github: "",
+      portfolio: ""
     },
     summary: "",
     experiences: [
@@ -146,6 +147,29 @@ describe("resumeSchema", () => {
     expect(result.error.issues).toContainEqual(
       expect.objectContaining({
         path: ["personal", "linkedin"]
+      })
+    );
+  });
+
+  it("accepts a valid portfolio URL", () => {
+    const resume = createValidResume();
+    resume.personal.portfolio = "https://jane.dev";
+
+    expect(resumeSchema.safeParse(resume).success).toBe(true);
+  });
+
+  it("rejects an invalid portfolio URL", () => {
+    const resume = createValidResume();
+    resume.personal.portfolio = "not a url";
+
+    const result = resumeSchema.safeParse(resume);
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+
+    expect(result.error.issues).toContainEqual(
+      expect.objectContaining({
+        path: ["personal", "portfolio"]
       })
     );
   });

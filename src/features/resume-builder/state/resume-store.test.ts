@@ -2,10 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   storage: {
-    getItem: vi.fn(async (_name: string) => {
-      void _name;
-      return null;
-    }),
+    getItem: vi.fn(
+      async (
+        _name: string
+      ): Promise<{ state: unknown; version?: number } | null> => {
+        void _name;
+        return null;
+      }
+    ),
     setItem: vi.fn(async (_name: string, _value: unknown) => {
       void _name;
       void _value;
@@ -35,7 +39,8 @@ const initialState = {
     phone: "",
     email: "",
     linkedin: "",
-    github: ""
+    github: "",
+    portfolio: ""
   },
   summary: "",
   experiences: [
@@ -109,7 +114,10 @@ describe("resume store", () => {
   it("clears resume data and custom skill options", () => {
     const store = useResumeStore.getState();
 
-    store.updatePersonal({ fullName: "Jane Doe" });
+    store.updatePersonal({
+      fullName: "Jane Doe",
+      portfolio: "https://jane.dev"
+    });
     store.addCustomSkillOption("frontend", "Svelte");
     store.updateSkills({ frontend: ["Svelte"] });
 
@@ -118,6 +126,7 @@ describe("resume store", () => {
     const cleared = useResumeStore.getState();
 
     expect(cleared.personal.fullName).toBe("");
+    expect(cleared.personal.portfolio).toBe("");
     expect(cleared.skills).toEqual({
       frontend: [],
       backend: [],
@@ -166,7 +175,10 @@ describe("resume store", () => {
     expect(useResumeStore.getState().experiences).toHaveLength(2);
   });
 
-  it("persists custom skill options", async () => {
+  it("persists portfolio and custom skill options", async () => {
+    useResumeStore.getState().updatePersonal({
+      portfolio: "https://jane.dev"
+    });
     useResumeStore.getState().addCustomSkillOption("tools", "Playwright");
     await Promise.resolve();
 
@@ -174,11 +186,39 @@ describe("resume store", () => {
     expect(lastWrite).toBeDefined();
 
     const persistedValue = lastWrite?.[1] as {
-      state: { customSkillOptions: typeof initialState.customSkillOptions };
+      state: {
+        personal: typeof initialState.personal;
+        customSkillOptions: typeof initialState.customSkillOptions;
+      };
     };
 
+    expect(persistedValue.state.personal.portfolio).toBe("https://jane.dev");
     expect(persistedValue.state.customSkillOptions.tools).toEqual([
       "Playwright"
     ]);
+  });
+
+  it("defaults portfolio for resumes saved before portfolio was added", async () => {
+    mocks.storage.getItem.mockResolvedValueOnce({
+      version: 3,
+      state: {
+        personal: {
+          fullName: "Jane Doe",
+          role: "",
+          location: "",
+          phone: "",
+          email: "",
+          linkedin: "",
+          github: ""
+        }
+      }
+    });
+
+    await useResumeStore.persist.rehydrate();
+
+    const personal = useResumeStore.getState().personal;
+
+    expect(personal.fullName).toBe("Jane Doe");
+    expect(personal.portfolio).toBe("");
   });
 });

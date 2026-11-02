@@ -263,6 +263,19 @@ export default function EditorPanel() {
                 updatePersonal({ github: event.target.value })
               }
             />
+
+            <InputField
+              id="portfolio"
+              name="portfolio"
+              label="Portfolio Link"
+              placeholder="johndoe.com"
+              type="url"
+              value={personal.portfolio}
+              error={errors["personal.portfolio"] ?? ""}
+              onChange={(event) =>
+                updatePersonal({ portfolio: event.target.value })
+              }
+            />
           </EditorPanelFieldset>
         </EditorPanelSection>
 
