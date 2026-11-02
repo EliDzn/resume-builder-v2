@@ -147,24 +147,16 @@ const projectSchema = z
 const certificationSchema = z
   .object({
     id: z.string(),
-    provider: z.string(),
     title: z.string(),
     completedDate: monthValue
   })
   .superRefine((certification, context) => {
-    if (
-      !hasContent([
-        certification.provider,
-        certification.title,
-        certification.completedDate
-      ])
-    ) {
+    if (!hasContent([certification.title, certification.completedDate])) {
       return;
     }
 
     addRequiredIssues(
       {
-        provider: { value: certification.provider, label: "Provider" },
         title: { value: certification.title, label: "Certification title" },
         completedDate: {
           value: certification.completedDate,
@@ -184,7 +176,8 @@ export const resumeSchema = z
       phone: z.string(),
       email: optionalEmail,
       linkedin: optionalUrl,
-      github: optionalUrl
+      github: optionalUrl,
+      portfolio: optionalUrl
     }),
     summary: z.string(),
     experiences: z.array(experienceSchema),

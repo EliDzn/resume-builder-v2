@@ -6,34 +6,41 @@ const resumeContextSchema = z
     summary: z.string().trim().max(3000),
     experiences: z
       .array(
-        z.object({
-          role: z.string().trim().max(160),
-          bullets: z.array(z.string().trim().max(700)).max(8)
-        })
+        z
+          .object({
+            role: z.string().trim().max(160),
+            bullets: z.array(z.string().trim().max(700)).max(8)
+          })
+          .strict()
       )
       .max(10),
     projects: z
       .array(
-        z.object({
-          name: z.string().trim().max(200),
-          techStack: z.string().trim().max(300),
-          bullets: z.array(z.string().trim().max(700)).max(8)
-        })
+        z
+          .object({
+            label: z.string().trim().max(20),
+            techStack: z.string().trim().max(300),
+            bullets: z.array(z.string().trim().max(700)).max(8)
+          })
+          .strict()
       )
       .max(10),
     certifications: z
       .array(
-        z.object({
-          provider: z.string().trim().max(160),
-          title: z.string().trim().max(200)
-        })
+        z
+          .object({
+            title: z.string().trim().max(200)
+          })
+          .strict()
       )
       .max(15),
-    skills: z.object({
-      frontend: z.array(z.string().trim().min(1).max(80)).max(30),
-      backend: z.array(z.string().trim().min(1).max(80)).max(30),
-      tools: z.array(z.string().trim().min(1).max(80)).max(30)
-    })
+    skills: z
+      .object({
+        frontend: z.array(z.string().trim().min(1).max(80)).max(30),
+        backend: z.array(z.string().trim().min(1).max(80)).max(30),
+        tools: z.array(z.string().trim().min(1).max(80)).max(30)
+      })
+      .strict()
   })
   .strict();
 

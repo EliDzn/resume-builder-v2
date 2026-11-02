@@ -1,20 +1,18 @@
-import { Document, pdf } from "@react-pdf/renderer";
 import { useEffect, useRef, useState } from "react";
-import * as pdfjs from "pdfjs-dist";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import "pdfjs-dist/web/pdf_viewer.css";
-import ImportFileButton from "./import-file-button";
 import PreviewToolbar from "./preview-toolbar";
-import ResumeDocument from "../pdf/resume-document";
+import ImportFileButton from "./import-file-button";
 import { usePreviewData } from "./use-preview-data";
 import type { ResumeData } from "../model/resume-type";
-
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+import type * as pdfjsTypes from "pdfjs-dist";
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2;
 const ZOOM_STEP = 0.05;
 const PREVIEW_DEBOUNCE_MS = 20;
+
+const adjustZoom = (current: number, change: number) =>
+  Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number((current + change).toFixed(2))));
 
 export default function PreviewPanelReactPdf() {
   const {
@@ -32,6 +30,7 @@ export default function PreviewPanelReactPdf() {
   const pagesRef = useRef<HTMLDivElement>(null);
   const [hasRendered, setHasRendered] = useState(false);
   const [zoom, setZoom] = useState(1);
+  const [outputWidth, setOutputWidth] = useState(0);
   const [result, setResult] = useState<{
     key: string;
     error?: string;
@@ -59,15 +58,7 @@ export default function PreviewPanelReactPdf() {
 
       event.preventDefault();
       setZoom((current) =>
-        Math.min(
-          MAX_ZOOM,
-          Math.max(
-            MIN_ZOOM,
-            Number(
-              (current + (event.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP)).toFixed(2)
-            )
-          )
-        )
+        adjustZoom(current, event.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP)
       );
     };
 
@@ -79,9 +70,22 @@ export default function PreviewPanelReactPdf() {
     const output = pagesRef.current;
     if (!hasHydrated || !hasResumeContent || !output) return;
 
+    const observer = new ResizeObserver(() => {
+      const width = output.clientWidth;
+      setOutputWidth((current) => (current === width ? current : width));
+    });
+
+    observer.observe(output);
+    return () => observer.disconnect();
+  }, [hasHydrated, hasResumeContent]);
+
+  useEffect(() => {
+    const output = pagesRef.current;
+    if (!hasHydrated || !hasResumeContent || !output) return;
+
     let active = true;
-    let loadingTask: ReturnType<typeof pdfjs.getDocument> | undefined;
-    const textLayers = new Set<pdfjs.TextLayer>();
+    let loadingTask: ReturnType<typeof pdfjsTypes.getDocument> | undefined;
+    const textLayers = new Set<pdfjsTypes.TextLayer>();
 
     const destroyLoadingTask = () => {
       const task = loadingTask;
@@ -91,6 +95,14 @@ export default function PreviewPanelReactPdf() {
 
     const renderPreview = async () => {
       try {
+        const [{ Document, pdf }, { default: ResumeDocument }] =
+          await Promise.all([
+            import("@react-pdf/renderer"),
+            import("../pdf/resume-document")
+          ]);
+
+        if (!active) return;
+
         const resume: ResumeData = {
           personal,
           summary,
@@ -100,11 +112,19 @@ export default function PreviewPanelReactPdf() {
           skills,
           fontFamily
         };
+
         const blob = await pdf(
           <Document title={personal.fullName || "Resume"}>
             <ResumeDocument resume={resume} />
           </Document>
         ).toBlob();
+
+        if (!active) return;
+
+        const pdfjs = await import("pdfjs-dist");
+        const { default: pdfWorkerUrl } =
+          await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
+        pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
         if (!active) return;
 
@@ -115,9 +135,12 @@ export default function PreviewPanelReactPdf() {
         const pdfDocument = await loadingTask.promise;
         const staging = document.createElement("div");
         staging.className =
-          "flex min-h-full w-max min-w-full flex-col items-center gap-6";
+          "flex min-h-full w-full min-w-0 flex-col items-center gap-6";
 
-        const availableWidth = Math.max(1, output.clientWidth - 32);
+        const availableWidth = Math.max(
+          1,
+          (outputWidth || output.clientWidth) - 32
+        );
         const outputScale = Math.min(window.devicePixelRatio || 1, 2);
 
         for (
@@ -225,7 +248,8 @@ export default function PreviewPanelReactPdf() {
     skills,
     fontFamily,
     zoom,
-    previewKey
+    previewKey,
+    outputWidth
   ]);
 
   if (!hasHydrated) {
@@ -238,11 +262,17 @@ export default function PreviewPanelReactPdf() {
 
   return (
     <section className="flex h-full min-h-0 w-full flex-col">
-      <PreviewToolbar />
+      <PreviewToolbar
+        onZoomOut={() => setZoom((current) => adjustZoom(current, -ZOOM_STEP))}
+        onZoomIn={() => setZoom((current) => adjustZoom(current, ZOOM_STEP))}
+        canZoomOut={hasResumeContent && zoom > MIN_ZOOM}
+        canZoomIn={hasResumeContent && zoom < MAX_ZOOM}
+      />
       {hasResumeContent ? (
         <div
+          key="resume-preview"
           ref={scrollerRef}
-          className="relative min-h-0 flex-1 overflow-auto bg-subtle p-4"
+          className="relative min-h-0 flex-1 overflow-auto max-lg:overflow-visible bg-subtle p-4"
         >
           <div
             ref={pagesRef}
@@ -270,8 +300,12 @@ export default function PreviewPanelReactPdf() {
           </div>
         </div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-auto bg-subtle p-4">
-          <div className="mx-auto flex h-full max-w-sm flex-col items-center justify-center text-center">
+        <div
+          key="empty-preview"
+          ref={scrollerRef}
+          className="min-h-0 flex-1 overflow-auto max-lg:overflow-visible bg-subtle p-8"
+        >
+          <div className="mx-auto flex min-h-full flex-col items-center justify-center text-center">
             <h2 className="font-semibold">Already have a resume?</h2>
             <p className="mb-4 text-sm text-muted-foreground">
               Import an existing DOCX or PDF, or start adding resume details in

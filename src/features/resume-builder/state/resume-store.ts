@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type {
   Certification,
+  CustomSkillOptions,
   Experience,
   PersonalInfo,
   Project,
@@ -22,11 +23,13 @@ type ResumeStore = ResumeData & {
   hasHydrated: boolean;
   past: ResumeData[];
   future: ResumeData[];
+  customSkillOptions: CustomSkillOptions;
 
   updateFontFamily: (fontFamily: ResumeFont) => void;
   updatePersonal: (changes: Partial<PersonalInfo>) => void;
   updateSummary: (summary: string) => void;
   updateSkills: (changes: Partial<ResumeSkills>) => void;
+  addCustomSkillOption: (category: keyof ResumeSkills, skill: string) => void;
   clearResume: () => void;
   undo: () => void;
   redo: () => void;
@@ -167,7 +170,6 @@ const createEmptyProject = (): Project => ({
 
 const createEmptyCertification = (): Certification => ({
   id: createId(),
-  provider: "",
   title: "",
   completedDate: ""
 });
@@ -179,7 +181,8 @@ const initialPersonal: PersonalInfo = {
   phone: "",
   email: "",
   linkedin: "",
-  github: ""
+  github: "",
+  portfolio: ""
 };
 
 function createInitialResumeData(): ResumeData {
@@ -192,6 +195,10 @@ function createInitialResumeData(): ResumeData {
     certifications: [createEmptyCertification()],
     skills: { frontend: [], backend: [], tools: [] }
   };
+}
+
+function createEmptyCustomSkillOptions(): CustomSkillOptions {
+  return { frontend: [], backend: [], tools: [] };
 }
 
 function getResumeData(state: ResumeStore): ResumeData {
@@ -234,13 +241,17 @@ export const useResumeStore = create<ResumeStore>()(
 
       const updateResume = (
         updater: (resume: ResumeData) => ResumeData,
-        historyMode: HistoryMode = "discrete"
+        historyMode: HistoryMode = "discrete",
+        additionalState: Partial<ResumeStore> = {}
       ) =>
         set((state) => {
           const currentResume = getResumeData(state);
           const nextResume = updater(currentResume);
 
-          if (JSON.stringify(currentResume) === JSON.stringify(nextResume)) {
+          if (
+            JSON.stringify(currentResume) === JSON.stringify(nextResume) &&
+            Object.keys(additionalState).length === 0
+          ) {
             return state;
           }
 
@@ -272,6 +283,7 @@ export const useResumeStore = create<ResumeStore>()(
 
           return {
             ...nextResume,
+            ...additionalState,
             past: nextPast,
             future: []
           };
@@ -291,6 +303,7 @@ export const useResumeStore = create<ResumeStore>()(
         hasHydrated: false,
         past: [],
         future: [],
+        customSkillOptions: createEmptyCustomSkillOptions(),
 
         updateFontFamily: (fontFamily) =>
           updateResume((resume) => ({ ...resume, fontFamily })),
@@ -306,6 +319,7 @@ export const useResumeStore = create<ResumeStore>()(
 
         updateSummary: (summary) =>
           updateResume((resume) => ({ ...resume, summary }), "typing"),
+
         updateSkills: (changes) =>
           updateResume(
             (resume) => ({
@@ -314,9 +328,35 @@ export const useResumeStore = create<ResumeStore>()(
             }),
             "typing"
           ),
+
+        addCustomSkillOption: (category, value) => {
+          const skill = value.trim();
+          if (!skill) return;
+
+          set((state) => {
+            const options = state.customSkillOptions[category];
+
+            if (
+              options.some((item) => item.toLowerCase() === skill.toLowerCase())
+            ) {
+              return state;
+            }
+
+            return {
+              customSkillOptions: {
+                ...state.customSkillOptions,
+                [category]: [...options, skill]
+              }
+            };
+          });
+        },
+
         replaceResume: (resume) => updateResume(() => resume),
 
-        clearResume: () => updateResume(() => createInitialResumeData()),
+        clearResume: () =>
+          updateResume(() => createInitialResumeData(), "discrete", {
+            customSkillOptions: createEmptyCustomSkillOptions()
+          }),
 
         undo: () => {
           closeTypingGroup();
@@ -539,12 +579,21 @@ export const useResumeStore = create<ResumeStore>()(
     {
       name: STORAGE_KEY,
       storage: createJSONStorage(() => indexedDbStorage),
-      version: 2,
-      partialize: (state) => getResumeData(state),
+      version: 4,
+      partialize: (state) => ({
+        ...getResumeData(state),
+        customSkillOptions: state.customSkillOptions
+      }),
       migrate: (persistedState) => {
-        const state = persistedState as Partial<ResumeData> & {
+        const state = persistedState as Omit<
+          Partial<ResumeData>,
+          "personal"
+        > & {
+          personal?: Partial<PersonalInfo>;
           skills?: Partial<Record<keyof ResumeSkills, unknown>>;
+          customSkillOptions?: Partial<Record<keyof ResumeSkills, unknown>>;
         };
+
         const toSkillArray = (value: unknown): string[] => {
           if (Array.isArray(value)) {
             return value.filter(
@@ -562,10 +611,20 @@ export const useResumeStore = create<ResumeStore>()(
 
         return {
           ...state,
+          personal: {
+            ...initialPersonal,
+            ...state.personal,
+            portfolio: state.personal?.portfolio ?? ""
+          },
           skills: {
             frontend: toSkillArray(state.skills?.frontend),
             backend: toSkillArray(state.skills?.backend),
             tools: toSkillArray(state.skills?.tools)
+          },
+          customSkillOptions: {
+            frontend: toSkillArray(state.customSkillOptions?.frontend),
+            backend: toSkillArray(state.customSkillOptions?.backend),
+            tools: toSkillArray(state.customSkillOptions?.tools)
           }
         };
       },

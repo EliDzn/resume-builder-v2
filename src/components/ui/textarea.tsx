@@ -13,7 +13,7 @@ export default function Textarea({
   return (
     <textarea
       className={cn(
-        "rounded-xs border-2 border-default p-2 placeholder:text-muted focus-visible:border-foreground min-h-8 aria-invalid:border-error aria-invalid:focus-visible:border-error",
+        "rounded-xs border-2 border-default p-2 placeholder:text-muted focus-visible:border-foreground min-h-8 aria-invalid:border-error aria-invalid:focus-visible:border-error focus-visible:outline-none",
         className
       )}
       required={required}

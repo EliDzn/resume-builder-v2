@@ -1,15 +1,20 @@
-import { useEffect, useRef, useState } from "react";
-import SidePanel from "./side-panel";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Button from "@/components/ui/button";
+import Modal from "@/components/ui/modal";
 import TextareaField from "@/components/ui/textarea-field";
+import SidePanel from "./side-panel";
 import { useResumeStore } from "../state/resume-store";
 import type { ResumeData } from "../model/resume-type";
-import { generateResumeSuggestions } from "@/lib/api-client";
+import {
+  generateResumeSuggestions,
+  getAIQuotaStatus,
+  type AIQuotaStatus
+} from "@/lib/api-client";
 import type { ResumeSuggestions } from "../model/gemini-suggestions";
-import { downloadResumePdf } from "../pdf/download-resume-pdf";
 import ImportFileButton from "./import-file-button";
 import InsightEntry from "./insight-entry";
 import { usePreviewData } from "./use-preview-data";
+import { Wand, Download } from "lucide-react";
 
 const SEVERITY_ORDER = {
   Error: 0,
@@ -27,20 +32,23 @@ export default function InsightPanel() {
   const fontFamily = useResumeStore((state) => state.fontFamily);
   const hasHydrated = useResumeStore((state) => state.hasHydrated);
 
-  // Use the existing preview hook to determine whether the resume has content.
   const { hasResumeContent } = usePreviewData();
 
+  const [consentOpen, setConsentOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const [jobDescription, setJobDescription] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
+  const [quotaStatus, setQuotaStatus] = useState<AIQuotaStatus | null>(null);
+  const [quotaError, setQuotaError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<ResumeSuggestions | null>(
     null
   );
 
   const requestControllerRef = useRef<AbortController | null>(null);
   const requestIdRef = useRef(0);
+  const quotaRequestIdRef = useRef(0);
   const previousHasResumeContentRef = useRef(hasResumeContent);
 
   const resume: ResumeData = {
@@ -53,7 +61,57 @@ export default function InsightPanel() {
     fontFamily
   };
 
-  // Clear AI state only when the resume transitions from populated to empty.
+  const refreshQuotaStatus = useCallback(async () => {
+    const requestId = ++quotaRequestIdRef.current;
+
+    try {
+      const status = await getAIQuotaStatus();
+
+      if (requestId === quotaRequestIdRef.current) {
+        setQuotaStatus(status);
+        setQuotaError(null);
+      }
+    } catch (error) {
+      if (requestId === quotaRequestIdRef.current) {
+        setQuotaError(
+          error instanceof Error
+            ? error.message
+            : "Could not retrieve AI quota status."
+        );
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydrated) {
+      return;
+    }
+
+    let isCurrent = true;
+    const requestId = ++quotaRequestIdRef.current;
+
+    getAIQuotaStatus()
+      .then((status) => {
+        if (isCurrent && requestId === quotaRequestIdRef.current) {
+          setQuotaStatus(status);
+          setQuotaError(null);
+        }
+      })
+      .catch((error: unknown) => {
+        if (isCurrent && requestId === quotaRequestIdRef.current) {
+          setQuotaError(
+            error instanceof Error
+              ? error.message
+              : "Could not retrieve AI quota status."
+          );
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [hasHydrated]);
+
   useEffect(() => {
     const wasPopulated = previousHasResumeContentRef.current;
     previousHasResumeContentRef.current = hasResumeContent;
@@ -66,6 +124,7 @@ export default function InsightPanel() {
     requestControllerRef.current?.abort();
     requestControllerRef.current = null;
 
+    setConsentOpen(false);
     setJobDescription("");
     setSuggestions(null);
     setGenerationError(null);
@@ -75,6 +134,7 @@ export default function InsightPanel() {
   useEffect(() => {
     return () => {
       requestIdRef.current += 1;
+      quotaRequestIdRef.current += 1;
       requestControllerRef.current?.abort();
     };
   }, []);
@@ -84,6 +144,7 @@ export default function InsightPanel() {
     setExportError(null);
 
     try {
+      const { downloadResumePdf } = await import("../pdf/download-resume-pdf");
       await downloadResumePdf(resume);
     } catch (error) {
       console.error("PDF export failed:", error);
@@ -95,8 +156,10 @@ export default function InsightPanel() {
     }
   };
 
-  const handleGenerateSuggestions = async () => {
-    requestControllerRef.current?.abort();
+  const runGenerateSuggestions = async () => {
+    if (requestControllerRef.current) {
+      return;
+    }
 
     const controller = new AbortController();
     requestControllerRef.current = controller;
@@ -140,8 +203,18 @@ export default function InsightPanel() {
       if (requestId === requestIdRef.current) {
         requestControllerRef.current = null;
         setIsGenerating(false);
+        void refreshQuotaStatus();
       }
     }
+  };
+
+  const handleGenerateSuggestions = () => {
+    setConsentOpen(true);
+  };
+
+  const handleConsentAndGenerate = () => {
+    setConsentOpen(false);
+    void runGenerateSuggestions();
   };
 
   const sortedInsights = suggestions
@@ -158,12 +231,13 @@ export default function InsightPanel() {
         <Button
           type="button"
           variant="Primary"
-          className="flex-1"
+          className="flex-1 gap-2"
           onClick={handleExport}
           disabled={!hasHydrated || isExporting}
           aria-busy={isExporting}
         >
           {isExporting ? "Preparing PDF..." : "Export Resume"}
+          <Download aria-hidden="true" className="h-4 w-4" />
         </Button>
       </div>
 
@@ -173,11 +247,12 @@ export default function InsightPanel() {
         </p>
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto px-4">
+      <div className="flex flex-1 flex-col gap-4 min-h-0 divide-y divide-foreground overflow-auto max-lg:overflow-visible px-4">
         <div className="flex flex-col gap-2">
           <h2 className="text-h2 font-semibold">Job Details</h2>
 
           <TextareaField
+            id="job-description"
             label="Job Description"
             placeholder="Paste the job description to get targeted resume suggestions."
             value={jobDescription}
@@ -186,21 +261,39 @@ export default function InsightPanel() {
             onChange={(event) => setJobDescription(event.target.value)}
           />
 
+          {quotaError && (
+            <p className="text-sm text-error" role="status">
+              {quotaError}
+            </p>
+          )}
+
           <Button
             type="button"
             variant="Primary"
-            className="w-full"
+            className="w-full gap-2"
             onClick={handleGenerateSuggestions}
             disabled={
               !hasHydrated ||
               !hasResumeContent ||
               isGenerating ||
+              quotaStatus?.remaining === 0 ||
               jobDescription.trim().length < 30
             }
             aria-busy={isGenerating}
           >
-            {isGenerating ? "Generating…" : "Generate Insights"}
+            {isGenerating
+              ? "Generating…"
+              : quotaStatus
+                ? `Generate Insights (${quotaStatus.remaining} remaining)`
+                : "Generate Insights"}
+            <Wand aria-hidden="true" className="h-4 w-4" />
           </Button>
+
+          <p className="text-fine-print text-default leading-5">
+            Resume details and the job description are sent to the app server
+            and Google Gemini only after you confirm. Automatic redaction can
+            miss identifying details.
+          </p>
         </div>
 
         {generationError && (
@@ -231,6 +324,47 @@ export default function InsightPanel() {
           </section>
         )}
       </div>
+
+      <Modal
+        open={consentOpen}
+        onClose={() => setConsentOpen(false)}
+        title="Send resume details for AI insights?"
+      >
+        <p>
+          To generate personalized insights, the app sends your job description
+          and selected resume details to its server, which forwards them to
+          Google Gemini. Details include your role, summary, experience roles
+          and bullets, project technology stacks and bullets, certification
+          titles, and skills.
+        </p>
+
+        <p>
+          The app removes known full names, company names, and project names,
+          plus detected emails, URLs, and clearly formatted North American phone
+          numbers. Automatic redaction can miss identifying details.
+          Certification titles remain included.
+        </p>
+
+        <p>
+          Upstash Redis handles quota and concurrency controls. It stores a
+          hashed IP-derived quota key for up to 24 hours and temporary request
+          locks for up to 60 seconds. It does not store generated insight
+          results.
+        </p>
+
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="Secondary"
+            onClick={() => setConsentOpen(false)}
+          >
+            Cancel
+          </Button>
+          <Button type="button" onClick={handleConsentAndGenerate}>
+            Continue and send
+          </Button>
+        </div>
+      </Modal>
     </SidePanel>
   );
 }

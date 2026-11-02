@@ -1,9 +1,3 @@
-import mammoth from "mammoth";
-import * as pdfjs from "pdfjs-dist";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
-
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
-
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 export async function readResumeFile(file: File): Promise<string> {
@@ -20,11 +14,18 @@ export async function readResumeFile(file: File): Promise<string> {
   let text: string;
 
   if (extension === "docx") {
+    const { default: mammoth } = await import("mammoth");
     const result = await mammoth.extractRawText({
       arrayBuffer: await file.arrayBuffer()
     });
     text = result.value;
   } else {
+    const pdfjs = await import("pdfjs-dist");
+    const { default: pdfWorkerUrl } =
+      await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
+
+    pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+
     const loadingTask = pdfjs.getDocument({
       data: new Uint8Array(await file.arrayBuffer())
     });
@@ -55,6 +56,7 @@ export async function readResumeFile(file: File): Promise<string> {
 
   const normalizedText = text
     .replace(/\r\n?/g, "\n")
+    .replace(/[ \t]*\n[ \t]*/g, "\n")
     .replace(/[ \t]+/g, " ")
     .replace(/\n{3,}/g, "\n\n")
     .trim();

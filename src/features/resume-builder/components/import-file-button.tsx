@@ -59,13 +59,13 @@ export default function ImportFileButton({
       <Button
         type="button"
         variant={variant}
-        className="w-full"
+        className="w-full gap-2"
         disabled={!hasHydrated || isImporting}
         aria-busy={isImporting}
         onClick={() => inputRef.current?.click()}
       >
-        <Upload aria-hidden="true" className="mr-2 h-4 w-4" />
         {isImporting ? "Importing..." : "Import Resume"}
+        <Upload aria-hidden="true" className="h-4 w-4" />
       </Button>
 
       {error && (

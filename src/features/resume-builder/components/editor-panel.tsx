@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Plus } from "lucide-react";
 import SidePanel from "./side-panel";
 import InputField from "@/components/ui/input-field";
 import TextareaField from "@/components/ui/textarea-field";
@@ -29,7 +30,9 @@ const skillGroups: {
       "TypeScript",
       "React",
       "Vue",
-      "Angular"
+      "Angular",
+      "Boostrap",
+      "Tailwind"
     ]
   },
   {
@@ -45,7 +48,8 @@ const skillGroups: {
       "C#",
       ".NET",
       "Go",
-      "PHP"
+      "PHP",
+      "Laravel"
     ]
   },
   {
@@ -59,9 +63,11 @@ const skillGroups: {
       "MongoDB",
       "AWS",
       "Azure",
+      "Google Cloud Platform",
       "Figma",
       "Jest",
-      "Vite"
+      "Vite",
+      "Vitest"
     ]
   }
 ];
@@ -78,11 +84,17 @@ export default function EditorPanel() {
   const projects = useResumeStore((state) => state.projects);
   const certifications = useResumeStore((state) => state.certifications);
   const skills = useResumeStore((state) => state.skills);
+  const customSkillOptions = useResumeStore(
+    (state) => state.customSkillOptions
+  );
   const fontFamily = useResumeStore((state) => state.fontFamily);
 
   const updatePersonal = useResumeStore((state) => state.updatePersonal);
   const updateSummary = useResumeStore((state) => state.updateSummary);
   const updateSkills = useResumeStore((state) => state.updateSkills);
+  const addCustomSkillOption = useResumeStore(
+    (state) => state.addCustomSkillOption
+  );
   const addExperience = useResumeStore((state) => state.addExperience);
   const addProject = useResumeStore((state) => state.addProject);
   const addCertification = useResumeStore((state) => state.addCertification);
@@ -93,27 +105,36 @@ export default function EditorPanel() {
     checked: boolean
   ) => {
     const selected = skills[category];
-    const nextSkills: Partial<ResumeSkills> = {
-      [category]: checked
-        ? [...selected, skill]
-        : selected.filter((item) => item !== skill)
-    };
+    const alreadySelected = selected.some(
+      (item) => item.toLowerCase() === skill.toLowerCase()
+    );
 
-    updateSkills(nextSkills);
+    const nextSelected = checked
+      ? alreadySelected
+        ? selected
+        : [...selected, skill]
+      : selected.filter((item) => item.toLowerCase() !== skill.toLowerCase());
+
+    updateSkills({ [category]: nextSelected });
   };
 
   const addCustomSkill = (category: keyof ResumeSkills) => {
     const skill = customSkills[category].trim();
     if (!skill) return;
 
-    if (
-      !skills[category].some(
-        (item) => item.toLowerCase() === skill.toLowerCase()
-      )
-    ) {
-      updateSkillSelection(category, skill, true);
+    const group = skillGroups.find(({ key }) => key === category);
+    const existingOption = [
+      ...(group?.options ?? []),
+      ...customSkillOptions[category]
+    ].find((option) => option.toLowerCase() === skill.toLowerCase());
+
+    const skillToSelect = existingOption ?? skill;
+
+    if (!existingOption) {
+      addCustomSkillOption(category, skill);
     }
 
+    updateSkillSelection(category, skillToSelect, true);
     setCustomSkills((current) => ({ ...current, [category]: "" }));
   };
 
@@ -140,10 +161,10 @@ export default function EditorPanel() {
   return (
     <SidePanel variant="left">
       <header className="shrink-0 px-4 py-9">
-        <h1 className="text-h1 font-bold">Optimized Resume Builder (v2)</h1>
+        <h1 className="text-h1 font-bold">Resume Builder (v2)</h1>
 
         <p className="mt-1 text-sm text-muted-foreground">
-          An AI-powered, local-first resume builder for developers. Generate a
+          A local-first resume builder with AI insight generation. Generate a
           polished, Harvard-format tech resume with built-in Gemini AI!
         </p>
       </header>
@@ -151,7 +172,7 @@ export default function EditorPanel() {
       <div
         ref={scrollRef}
         className={[
-          "min-h-0 divide-y divide-foreground overflow-auto",
+          "min-h-0 divide-y divide-foreground overflow-auto max-lg:overflow-visible",
           isOverflowing ? "border-t" : "border-y",
           "border-foreground"
         ].join(" ")}
@@ -247,6 +268,19 @@ export default function EditorPanel() {
                 updatePersonal({ github: event.target.value })
               }
             />
+
+            <InputField
+              id="portfolio"
+              name="portfolio"
+              label="Portfolio Link"
+              placeholder="johndoe.com"
+              type="url"
+              value={personal.portfolio}
+              error={errors["personal.portfolio"] ?? ""}
+              onChange={(event) =>
+                updatePersonal({ portfolio: event.target.value })
+              }
+            />
           </EditorPanelFieldset>
         </EditorPanelSection>
 
@@ -324,57 +358,78 @@ export default function EditorPanel() {
             Add Certification
           </Button>
         </EditorPanelSection>
+
         <EditorPanelSection title="Skills">
           <EditorPanelFieldset>
-            {skillGroups.map(({ key, label, options }) => (
-              <fieldset key={key} className="flex min-w-0 flex-col gap-3">
-                <legend className="font-semibold">{label}</legend>
-                <div className="flex flex-wrap gap-2">
-                  {options.map((skill) => (
-                    <Checkbox
-                      key={skill}
-                      checked={skills[key].includes(skill)}
-                      aria-label={`${label}: ${skill}`}
-                      onCheckedChange={(checked) =>
-                        updateSkillSelection(key, skill, checked)
+            {skillGroups.map(({ key, label, options }) => {
+              const availableOptions = [
+                ...options,
+                ...customSkillOptions[key].filter(
+                  (customOption) =>
+                    !options.some(
+                      (option) =>
+                        option.toLowerCase() === customOption.toLowerCase()
+                    )
+                )
+              ];
+
+              return (
+                <fieldset key={key} className="flex min-w-0 flex-col gap-3">
+                  <legend className="font-semibold">{label}</legend>
+
+                  <div className="flex flex-wrap gap-2">
+                    {availableOptions.map((skill) => (
+                      <Checkbox
+                        key={skill}
+                        checked={skills[key].some(
+                          (selected) =>
+                            selected.toLowerCase() === skill.toLowerCase()
+                        )}
+                        aria-label={`${label}: ${skill}`}
+                        onCheckedChange={(checked) =>
+                          updateSkillSelection(key, skill, checked)
+                        }
+                      >
+                        {skill}
+                      </Checkbox>
+                    ))}
+                  </div>
+
+                  <div className="flex items-end gap-2">
+                    <InputField
+                      id={`skills-${key}-custom`}
+                      name={`skills.${key}.custom`}
+                      label={`Custom ${label} skill`}
+                      placeholder="Add another skill"
+                      value={customSkills[key]}
+                      error=""
+                      onChange={(event) =>
+                        setCustomSkills((current) => ({
+                          ...current,
+                          [key]: event.target.value
+                        }))
                       }
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          addCustomSkill(key);
+                        }
+                      }}
+                    />
+
+                    <button
+                      type="button"
+                      disabled={!customSkills[key].trim()}
+                      className="border-2 border-default rounded-xs text-default hover:bg-strong hover:text-background hover:border-strong active:bg-muted active:text-background active:border-muted hover:cursor-pointer py-2.5 px-2.5 disabled:cursor-not-allowed disabled:opacity-50"
+                      aria-label={`Add ${label} skill`}
+                      onClick={() => addCustomSkill(key)}
                     >
-                      {skill}
-                    </Checkbox>
-                  ))}
-                </div>
-                <div className="flex items-end gap-2">
-                  <InputField
-                    id={`skills-${key}-custom`}
-                    name={`skills.${key}.custom`}
-                    label={`Custom ${label} skill`}
-                    placeholder="Add another skill"
-                    value={customSkills[key]}
-                    error=""
-                    onChange={(event) =>
-                      setCustomSkills((current) => ({
-                        ...current,
-                        [key]: event.target.value
-                      }))
-                    }
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        event.preventDefault();
-                        addCustomSkill(key);
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="Ghost"
-                    disabled={!customSkills[key].trim()}
-                    onClick={() => addCustomSkill(key)}
-                  >
-                    Add
-                  </Button>
-                </div>
-              </fieldset>
-            ))}
+                      <Plus aria-hidden="true" size={20} />
+                    </button>
+                  </div>
+                </fieldset>
+              );
+            })}
           </EditorPanelFieldset>
         </EditorPanelSection>
       </div>

@@ -8,6 +8,7 @@ export type PersonalInfo = {
   email: string;
   linkedin: string;
   github: string;
+  portfolio: string;
 };
 
 export type Experience = {
@@ -29,7 +30,6 @@ export type Project = {
 
 export type Certification = {
   id: string;
-  provider: string;
   title: string;
   completedDate: string;
 };
@@ -39,6 +39,8 @@ export type ResumeSkills = {
   backend: string[];
   tools: string[];
 };
+
+export type CustomSkillOptions = Record<keyof ResumeSkills, string[]>;
 
 export type ResumeData = {
   personal: PersonalInfo;
