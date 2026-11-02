@@ -261,7 +261,7 @@ export default function PreviewPanelReactPdf() {
         <div
           key="resume-preview"
           ref={scrollerRef}
-          className="relative min-h-0 flex-1 overflow-auto bg-subtle p-4"
+          className="relative min-h-0 flex-1 overflow-auto max-lg:overflow-visible bg-subtle p-4"
         >
           <div
             ref={pagesRef}
@@ -292,7 +292,7 @@ export default function PreviewPanelReactPdf() {
         <div
           key="empty-preview"
           ref={scrollerRef}
-          className="min-h-0 flex-1 overflow-auto bg-subtle p-8"
+          className="min-h-0 flex-1 overflow-auto max-lg:overflow-visible bg-subtle p-8"
         >
           <div className="mx-auto flex min-h-full flex-col items-center justify-center text-center">
             <h2 className="font-semibold">Already have a resume?</h2>

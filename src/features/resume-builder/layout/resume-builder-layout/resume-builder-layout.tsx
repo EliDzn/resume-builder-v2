@@ -14,10 +14,10 @@ export default function ResumeBuilderLayout() {
   const panelClass = `min-w-0 ${styles.panel}`;
 
   return (
-    <main className="flex h-dvh w-full min-w-0 flex-col overflow-hidden">
+    <main className="flex h-dvh w-full min-w-0 flex-col overflow-hidden max-lg:h-auto max-lg:min-h-dvh max-lg:overflow-visible">
       <ResizablePanelGroup
         orientation="horizontal"
-        className={`${styles.panelGroup} min-h-0 min-w-0 flex-1 print:hidden`}
+        className={`${styles.panelGroup} min-h-0 min-w-0 flex-1 print:hidden max-lg:flex-none`}
       >
         <ResizablePanel
           defaultSize="25%"

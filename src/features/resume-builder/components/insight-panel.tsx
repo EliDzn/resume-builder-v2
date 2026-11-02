@@ -15,7 +15,7 @@ import { downloadResumePdf } from "../pdf/download-resume-pdf";
 import ImportFileButton from "./import-file-button";
 import InsightEntry from "./insight-entry";
 import { usePreviewData } from "./use-preview-data";
-import { Wand } from "lucide-react";
+import { Wand, Download } from "lucide-react";
 
 const SEVERITY_ORDER = {
   Error: 0,
@@ -231,12 +231,13 @@ export default function InsightPanel() {
         <Button
           type="button"
           variant="Primary"
-          className="flex-1"
+          className="flex-1 gap-2"
           onClick={handleExport}
           disabled={!hasHydrated || isExporting}
           aria-busy={isExporting}
         >
           {isExporting ? "Preparing PDF..." : "Export Resume"}
+          <Download aria-hidden="true" className="h-4 w-4" />
         </Button>
       </div>
 
@@ -246,7 +247,7 @@ export default function InsightPanel() {
         </p>
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto px-4">
+      <div className="flex flex-1 flex-col gap-4 min-h-0 divide-y divide-foreground overflow-auto max-lg:overflow-visible px-4">
         <div className="flex flex-col gap-2">
           <h2 className="text-h2 font-semibold">Job Details</h2>
 
@@ -288,7 +289,7 @@ export default function InsightPanel() {
             <Wand aria-hidden="true" className="h-4 w-4" />
           </Button>
 
-          <p className="text-fine-print text-default">
+          <p className="text-fine-print text-default leading-5">
             Resume details and the job description are sent to the app server
             and Google Gemini only after you confirm. Automatic redaction can
             miss identifying details.

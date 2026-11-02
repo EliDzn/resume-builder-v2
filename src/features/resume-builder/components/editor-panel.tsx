@@ -167,7 +167,7 @@ export default function EditorPanel() {
       <div
         ref={scrollRef}
         className={[
-          "min-h-0 divide-y divide-foreground overflow-auto",
+          "min-h-0 divide-y divide-foreground overflow-auto max-lg:overflow-visible",
           isOverflowing ? "border-t" : "border-y",
           "border-foreground"
         ].join(" ")}
