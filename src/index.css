@@ -20,7 +20,7 @@ body {
 }
 
 :root {
-  --font-ui: "Inter", system-ui, sans-serif;
+  --font-ui: "Manrope", system-ui, sans-serif;
   --font-resume-inter: "Inter", system-ui, sans-serif;
   --font-resume-times: "Times New Roman", Times, serif;
 
@@ -34,7 +34,6 @@ body {
   --success: oklch(0.51 0.065 162.564);
   --warning: oklch(0.67 0.132 79.111);
   --error: oklch(0.498 0.165 28.937);
-
 }
 
 @theme {
@@ -52,32 +51,35 @@ body {
   --color-warning: var(--warning);
   --color-error: var(--error);
 
+  /* Desktop type scale */
+  --text-h1: 2.027rem;
+  --text-h1--line-height: 1.2;
 
-  /* H1 */
-  --text-h1: 1.424rem;
-  --text-h1-line-height: 1.4375rem;
+  --text-h2: 1.802rem;
+  --text-h2--line-height: 1.2;
 
-  /* H2 */
-  --text-h2: 1.266rem;
-  --text-h2-line-height: 1.25rem;
+  --text-h3: 1.602rem;
+  --text-h3--line-height: 1.2;
 
-  /* H3 */
-  --text-h3: 1.125rem;
-  --text-h3--line-height: 1.125rem;
+  --text-h4: 1.424rem;
+  --text-h4--line-height: 1.2;
 
-  /* Body */
+  --text-h5: 1.266rem;
+  --text-h5--line-height: 1.2;
+
+  --text-h6: 1.125rem;
+  --text-h6--line-height: 1.2;
+
   --text-body: 1rem;
-  --text-body--line-height: 1rem;
+  --text-body--line-height: 1.5;
 
-  /* Caption */
   --text-caption: 0.889rem;
-  --text-caption--line-height: 0.875rem;
+  --text-caption--line-height: 1.4;
 
-  /* Fine Print */
   --text-fine-print: 0.79rem;
-  --text-fine-print--line-height: 0.8125rem;
+  --text-fine-print--line-height: 1.4;
 
-  /* Layout Spacing */
+  /* Layout spacing */
   --spacing-page-mobile: 1rem;
   --spacing-page-tablet: 1.5rem;
   --spacing-page-desktop: 2rem;
@@ -85,6 +87,18 @@ body {
   --spacing-grid-mobile: 1rem;
   --spacing-grid-tablet: 1.25rem;
   --spacing-grid-desktop: 1.5rem;
+}
+
+@media (max-width: 767px) {
+  :root {
+    /* Mobile type scale: 23, 20, 18, 16, 14, 13px */
+    --text-h1: 1.424rem;
+    --text-h2: 1.266rem;
+    --text-h3: 1.125rem;
+    --text-h4: 1rem;
+    --text-h5: 0.889rem;
+    --text-h6: 0.79rem;
+  }
 }
 
 @layer base {
@@ -105,7 +119,6 @@ body {
   #root {
     min-height: 100vh;
   }
-
 }
 
 @media (prefers-reduced-motion: reduce) {

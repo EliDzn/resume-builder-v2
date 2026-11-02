@@ -30,7 +30,9 @@ const skillGroups: {
       "TypeScript",
       "React",
       "Vue",
-      "Angular"
+      "Angular",
+      "Boostrap",
+      "Tailwind"
     ]
   },
   {
@@ -46,7 +48,8 @@ const skillGroups: {
       "C#",
       ".NET",
       "Go",
-      "PHP"
+      "PHP",
+      "Laravel"
     ]
   },
   {
@@ -60,9 +63,11 @@ const skillGroups: {
       "MongoDB",
       "AWS",
       "Azure",
+      "Google Cloud Platform",
       "Figma",
       "Jest",
-      "Vite"
+      "Vite",
+      "Vitest"
     ]
   }
 ];
@@ -159,7 +164,7 @@ export default function EditorPanel() {
         <h1 className="text-h1 font-bold">Resume Builder (v2)</h1>
 
         <p className="mt-1 text-sm text-muted-foreground">
-          An AI-powered, local-first resume builder for developers. Generate a
+          A local-first resume builder with AI insight generation. Generate a
           polished, Harvard-format tech resume with built-in Gemini AI!
         </p>
       </header>

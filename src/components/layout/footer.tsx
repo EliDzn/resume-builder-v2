@@ -110,13 +110,12 @@ export default function Footer() {
           <section className="space-y-2">
             <h3 className="text-h3 font-semibold">Your privacy rights</h3>
             <p>
-              Depending on where you live, you may have rights to access,
-              correct, delete, or object to certain uses of personal
-              information. Local resume data can be cleared using the controls
-              above. For requests about information processed by the app or its
-              providers, contact the app operator using the contact method
-              published with the app. Rights and provider responses depend on
-              applicable law and service terms.
+              Resume edits are stored in this browser and can be cleared using{" "}
+              <strong>Clear resume </strong>. When you request AI insights,
+              selected resume details and your job description are sent to the
+              app server and Google Gemini. For questions about this processing,
+              contact elialeandro.dizon@gmail.com. Provider handling is subject
+              to their privacy terms.
             </p>
           </section>
         </div>
